@@ -1,7 +1,7 @@
 # dbt test results
 
-43 tests: 42 pass, 1 warn
+43 tests: 1 fail, 42 pass
 
 | Test | Status | Rows flagged |
 |---|---|---|
-| between_fct_inverter_monthly_performance_index__2__0 | warn | 3 |
+| not_null_int_inverter_intervals_expected_kwh | fail | 477578 |

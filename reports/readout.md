@@ -1,27 +1,30 @@
 # Solar Fleet Contract Compliance: Readout
 
-**Fleet:** 2 US commercial solar sites, 35 inverters (about 3.48 MW by observed peak AC), 2017-11 to 2025-12. Source: NREL PVDAQ 2023 Solar Data Prize data.
+**Fleet:** 2 US commercial solar sites, 26 inverters (about 4.51 MW by observed peak AC), 2017-08 to 2025-12. Source: NREL PVDAQ 2023 Solar Data Prize data.
+
+- Farm Solar Array, Arbuckle CA (893 kW DC, 24 x ABB TRIO-27.6, fixed tilt)
+- Site 9068 (single-axis tracker)
 
 ## Headline
 
-- **152** of 155 site-months had enough data to assess. **17** met every contract term and **135** breached at least one.
-- Breaches by term: time availability 90, energy availability 88, data availability 58, restore SLA 58.
-- **9,453** outage tickets generated from telemetry (3,962 site-wide), median duration 1.3 h, **208** past the restore SLA. **328** underperformance tickets.
-- Fleet produced 34,517.4 MWh and lost an estimated 1,334.42 MWh to downtime (energy-based availability 96.3%). Illustrative liquidated-damages exposure: $99,438.
+- **183** of 188 site-months had enough data to assess. **78** met every contract term and **105** breached at least one.
+- Breaches by term: time availability 87, energy availability -296, data availability 14, restore SLA 61.
+- **6,714** outage tickets generated from telemetry (2,613 site-wide), median duration 1.5 h, **165** past the restore SLA. **225** underperformance tickets.
+- Fleet produced 60,235.4 MWh and lost an estimated 817.91 MWh to downtime (energy-based availability 98.7%). Illustrative liquidated-damages exposure: $67,766.
 
 ## Hypotheses
 
 **1. Downtime losses are concentrated in a few inverters.**
-The top 4 inverters (10% of the fleet) account for 22.6% of lost energy: 2105-INV05 (88.6 MWh), 2107-INV07 (77.28 MWh), 2107-INV06 (70.6 MWh), 2107-INV02 (64.89 MWh). The 10 largest outages account for 7.7% of outage losses.
+The top 3 inverter(s) (10% of the fleet) account for 22.4% of lost energy: 2107-INV07 (67.27 MWh), 2107-INV06 (61.08 MWh), 2107-INV02 (55.27 MWh). The 10 largest outages account for 11.8% of outage losses.
 
 **2. Outages are seasonal.**
-Highest outage rates per 100 inverter-months: Jul (610.4), Aug (466.0), Jun (440.4). Lowest: 162.9.
+Highest outage rates per 100 inverter-months: Jul (625.0), Jun (475.5), Aug (470.0). Lowest: 77.3.
 
 **3. Monitoring gaps and downtime happen together.**
-Rank correlation between an inverter-month's data-gap share and its downtime share: -0.27. 37 of 135 breach months failed only the data availability term, which points to monitoring rather than hardware for those months.
+Rank correlation between an inverter-month's data-gap share and its downtime share: -0.08. 8 of 105 breach months failed only the data availability term, which points to monitoring rather than hardware for those months.
 
 **4. Some inverters drift below their peers over time.**
-9 of 35 inverters with at least 12 assessable months lose 1% or more of peer-relative performance per year. Worst: 2105-INV04 (-8.1%/yr), 2105-INV11 (-8.1%/yr), 2107-INV15 (-4.2%/yr).
+5 of 24 inverters with at least 12 assessable months lose 1% or more of peer-relative performance per year. Worst: 2107-INV15 (-3.8%/yr), 2107-INV21 (-1.6%/yr), 2107-INV10 (-1.3%/yr).
 
 ## What this does and does not show
 
@@ -33,4 +36,4 @@ Rank correlation between an inverter-month's data-gap share and its downtime sha
 | Underperformance | Energy below peers while available, which can mean soiling, shading, string faults or clipping | Site inspection, IV curves, string-level data |
 | Drift | A peer-relative trend, not absolute degradation | Irradiance-corrected performance ratio over time |
 
-**Contract terms are illustrative** (seeds/contract_terms.csv): 98% time availability, 98.5% energy availability, 95% data availability, restore within 72 hours, $0.10/kWh liquidated damages. A site-wide outage cannot be told apart from heavy snow cover using power data alone.
+**Contract terms are illustrative** (seeds/contract_terms.csv): 98% time availability, 98.5% energy availability, 95% data availability, restore within 72 hours, $0.10/kWh liquidated damages. Production windows use plane-of-array irradiance of at least 200 W/m2 where a sensor exists, and peer comparison otherwise.
