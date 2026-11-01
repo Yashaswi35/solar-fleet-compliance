@@ -59,6 +59,9 @@ def headline(d: dict) -> dict:
         "restore_sla_breaches": int(outages["sla_breached"].sum()),
         "median_outage_hours": round(float(outages["duration_hours"].median()), 1) if len(outages) else None,
         "underperformance_tickets": int((t["ticket_type"] == "underperformance").sum()),
+        "recurring_trip_tickets": int((outages["summary_prefix"] == "Recurring inverter trips").sum()),
+        "monitoring_fault_inverter_hours": round(float(inv.get("monitoring_fault_intervals",
+                                                       pd.Series(dtype=float)).sum()) * 5 / 60, 1),
         "actual_mwh": round(actual / 1000, 1),
         "lost_mwh": round(lost / 1000, 2),
         "fleet_energy_availability": round(actual / (actual + lost), 4) if actual + lost else None,
@@ -116,6 +119,20 @@ def comms_vs_downtime(d: dict) -> dict:
     }
 
 
+def recurring_by_year(d: dict) -> pd.DataFrame:
+    t = d["tickets"]
+    r = t[t["summary_prefix"] == "Recurring inverter trips"]
+    if r.empty:
+        return pd.DataFrame(columns=["year", "incidents", "lost_mwh", "top_inverters"])
+    r = r.assign(year=r["opened_at"].dt.year)
+    rows = []
+    for y, g in r.groupby("year"):
+        top = g["asset_id"].value_counts().head(3)
+        rows.append({"year": int(y), "incidents": len(g), "lost_mwh": round(g["lost_kwh"].sum() / 1000, 1),
+                     "top_inverters": ", ".join(f"{a} ({n})" for a, n in top.items())})
+    return pd.DataFrame(rows)
+
+
 def drift(d: dict) -> pd.DataFrame:
     inv = d["inv"].dropna(subset=["performance_index"])
     inv = inv[inv["available_intervals"] >= 300]
@@ -139,7 +156,8 @@ def site_labels(config: Path, site_ids) -> list[str]:
     return [labels.get(int(s), f"Site {s}") for s in site_ids]
 
 
-def render(h: dict, c: dict, s: pd.DataFrame, cv: dict, dr: pd.DataFrame, labels: list[str]) -> str:
+def render(h: dict, c: dict, s: pd.DataFrame, cv: dict, dr: pd.DataFrame, labels: list[str],
+           rec: pd.DataFrame | None = None) -> str:
     L = []
     L += ["# Solar Fleet Contract Compliance: Readout", ""]
     noun = "site" if h["sites"] == 1 else "sites"
@@ -157,6 +175,11 @@ def render(h: dict, c: dict, s: pd.DataFrame, cv: dict, dr: pd.DataFrame, labels
           f"({h['site_wide_outage_tickets']:,} site-wide), median duration {h['median_outage_hours']} h, "
           f"**{h['restore_sla_breaches']:,}** past the restore SLA. "
           f"**{h['underperformance_tickets']:,}** underperformance tickets."]
+    L += [f"- {h['recurring_trip_tickets']:,} of the outage tickets are recurring trips: an inverter dropping out "
+          f"several times within a couple of hours, grouped into one ticket per incident."]
+    if h.get("monitoring_fault_inverter_hours"):
+        L += [f"- {h['monitoring_fault_inverter_hours']:,} inverter-hours where every inverter read zero but the revenue "
+              f"meter showed production were treated as monitoring faults, not downtime."]
     L += [f"- Fleet produced {h['actual_mwh']:,} MWh and lost an estimated {h['lost_mwh']:,} MWh to downtime "
           f"(energy-based availability {pct(h['fleet_energy_availability'])}). "
           f"Illustrative liquidated-damages exposure: ${h['illustrative_ld_usd']:,.0f}.", ""]
@@ -194,12 +217,19 @@ def render(h: dict, c: dict, s: pd.DataFrame, cv: dict, dr: pd.DataFrame, labels
         L += ["Not enough history to estimate drift."]
     L += [""]
 
+    L += ["**5. Recurring trips are concentrated in a few inverters and change over time.**"]
+    if rec is not None and len(rec):
+        L += ["", "| Year | Recurring-trip incidents | Lost MWh | Most affected inverters |", "|---|---|---|---|"]
+        L += [f"| {r.year} | {r.incidents:,} | {r.lost_mwh:,} | {r.top_inverters} |" for r in rec.itertuples()]
+        L += ["", "A sharp drop after a given year is consistent with a repair, replacement or firmware change on "
+              "those inverters. Fault codes and work orders would confirm the cause."]
+    L += [""]
     L += ["## What this does and does not show", ""]
     L += ["| Finding | What the data supports | What a service team would check with internal data |",
           "|---|---|---|",
           "| Contract breaches | Telemetry-based availability against the illustrative terms below | The real contract language, exclusions (curtailment, grid events, force majeure) and measurement rules |",
-          "| Outage tickets | When an inverter stopped producing while its peers or its typical profile said it should | Work orders, fault codes and the actual dispatch and repair times |",
-          "| Lost energy | Peer- or profile-based estimate of energy not produced during downtime | Revenue-grade meter data and any irradiance-based expected energy model |",
+          "| Outage tickets | When an inverter stopped producing while irradiance (or its peers) said it should, grouped into incidents | Work orders, fault codes and the actual dispatch and repair times |",
+          "| Lost energy | Peer-based estimate, or irradiance-based for site-wide outages, of energy not produced during downtime | A full irradiance and temperature performance model, and curtailment records |",
           "| Underperformance | Energy below peers while available, which can mean soiling, shading, string faults or clipping | Site inspection, IV curves, string-level data |",
           "| Drift | A peer-relative trend, not absolute degradation | Irradiance-corrected performance ratio over time |",
           ""]
@@ -219,9 +249,10 @@ def main(argv: list[str] | None = None) -> int:
     d = load(Path(args.marts))
     labels = site_labels(Path(args.config), sorted(d["assets"]["site_id"].unique()))
     h, c, s, cv, dr = headline(d), concentration(d), seasonality(d), comms_vs_downtime(d), drift(d)
+    rec = recurring_by_year(d)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    (out / "readout.md").write_text(render(h, c, s, cv, dr, labels))
+    (out / "readout.md").write_text(render(h, c, s, cv, dr, labels, rec))
     summary = {"headline": h, "concentration": c, "comms_vs_downtime": cv,
                "drifting_inverters": int((dr["slope_per_year"] <= -0.01).sum()) if len(dr) else 0}
     (out / "summary.json").write_text(json.dumps(summary, indent=2, default=str))

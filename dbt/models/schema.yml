@@ -83,6 +83,17 @@ models:
           - between:
               arguments: {min_value: 0, max_value: 100000000}
 
+  - name: int_outage_incidents
+    description: Outage events grouped into incidents (one per ticket).
+    columns:
+      - name: incident_id
+        data_tests: [unique, not_null]
+      - name: scope
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['inverter', 'site']
+
   - name: dim_assets
     description: One row per inverter in the fleet.
     columns:

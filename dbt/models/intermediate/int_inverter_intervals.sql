@@ -1,7 +1,8 @@
 -- Status of every inverter in every production window.
 --   available  producing in line with the site
 --   down       near zero while the site (or its typical profile) says it should produce
---   no_data    no reading received; a monitoring gap, not counted as downtime
+--   no_data    no reading received, or readings contradicted by the revenue meter;
+--              a monitoring gap, not counted as downtime
 select
     w.site_id,
     c.inverter_id,
@@ -10,11 +11,12 @@ select
     w.month,
     w.window_type,
     w.is_site_outage,
+    w.is_monitoring_fault,
     w.poa_wm2,
     c.capacity_kw,
     p.ac_kw,
     case
-        when p.ac_kw is null then 'no_data'
+        when p.ac_kw is null or w.is_monitoring_fault then 'no_data'
         when p.ac_kw / c.capacity_kw < {{ var('down_threshold') }} then 'down'
         else 'available'
     end as status,

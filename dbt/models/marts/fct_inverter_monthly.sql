@@ -8,6 +8,7 @@ with monthly as (
         count(*) filter (where status = 'available')                as available_intervals,
         count(*) filter (where status = 'down')                     as down_intervals,
         count(*) filter (where status = 'no_data')                  as no_data_intervals,
+        count(*) filter (where is_monitoring_fault)                 as monitoring_fault_intervals,
         sum(actual_kwh)                                             as actual_kwh,
         sum(greatest(expected_kwh - actual_kwh, 0)) filter (where status = 'down') as lost_kwh,
         sum(actual_kwh) filter (where status = 'available' and not is_site_outage) as available_kwh,
@@ -19,6 +20,7 @@ with monthly as (
 select
     asset_id, site_id, inverter_id, month,
     window_intervals, available_intervals, down_intervals, no_data_intervals,
+    monitoring_fault_intervals,
     actual_kwh,
     coalesce(lost_kwh, 0)                                                   as lost_kwh,
     coalesce(available_kwh, 0)                                              as available_kwh,

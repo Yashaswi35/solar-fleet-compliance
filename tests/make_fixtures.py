@@ -8,10 +8,13 @@ Site 2107 (wide AC power, 6 inverters, 30 kW each)
   * INV01 15-minute dip on day 3 (below the 30-minute ticket threshold) -> no ticket
   * INV05 communications gap for all of day 20 (no readings)          -> data gap, not downtime
   * INV04 runs at 80% of peers from day 30 (July)                      -> 1 underperformance ticket
-  * every inverter trips on day 25 from 10:00 to 13:00                 -> 6 site-wide outage tickets
+  * every inverter trips on day 25 from 10:00 to 13:00                 -> 1 site-wide outage ticket
+  * every inverter reads 0 on day 35 from 10:00 to 12:00 while the revenue meter
+    shows normal output                                                -> monitoring fault, no ticket
   * INV06 wakes up at 07:30 every day, while irradiance is under 200 W/m2 -> no tickets
-  Site 2107 also gets a plane-of-array irradiance file; site 2105 has none, so it
-  exercises the peer-comparison fallback.
+  Site 2107 also gets a plane-of-array irradiance file and a 15-minute revenue
+  meter file stamped in UTC; site 2105 has neither, so it exercises the
+  peer-comparison fallback.
 Site 2105 (cumulative kWh per inverter file, 4 inverters, 40 kW each)
   * INV03 outage from day 5 08:00 to day 9 12:00 (> 72 h)            -> 1 outage ticket, SLA breach
 
@@ -66,6 +69,7 @@ def site_2107(out: Path) -> None:
             hour = np.asarray(ts.hour + ts.minute / 60)
             p[(hour >= 6) & (hour < 7.5)] = 0.0  # wakes up late every morning, below 200 W/m2
         p[window(ts, 25, 10, 25, 13)] = 0.0  # site-wide trip, all inverters
+        p[window(ts, 35, 10, 35, 12)] = 0.0  # monitoring fault: inverters read 0, meter does not
         p = np.round(np.maximum(p, 0), 3).astype(object)
         if n == 5:
             p[window(ts, 20, 0, 21, 0)] = None
@@ -81,6 +85,14 @@ def site_2107(out: Path) -> None:
         "poa_irradiance_o_149574": np.round(1000 * solar_shape(ts) * cloud, 1),
     })
     irr.to_csv(out / "2107" / "2107_irradiance_data.csv", index=False)
+    # Revenue meter: 15-minute readings stamped in UTC, as in the newer PVDAQ files.
+    meter_kw = 6 * base
+    meter_kw[window(ts, 25, 10, 25, 13)] = 0.0  # the real trip shows on the meter too
+    meter = pd.Series(meter_kw, index=ts).resample("15min").mean()
+    utc = meter.index.tz_localize("America/Los_Angeles").tz_convert("UTC").tz_localize(None)
+    pd.DataFrame({"utc_measured_on": utc.strftime("%Y-%m-%d %H:%M:%S"),
+                  "meter_revenue_grade_ac_output_meter_149578": np.round(meter.values, 2)}
+                 ).to_csv(out / "2107" / "2107_meter_15m_data.csv", index=False)
 
 
 def site_2105(out: Path) -> None:

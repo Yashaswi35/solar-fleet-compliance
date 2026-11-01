@@ -27,7 +27,7 @@ events as (
         max(ts) + interval 5 minute                    as last_down_at,
         min(next_available_ts)                         as restored_at,
         count(*)                                       as down_intervals,
-        bool_or(is_site_outage)           as site_wide,
+        avg(is_site_outage::int) >= 0.5       as site_wide,
         sum(greatest(expected_kwh - actual_kwh, 0))    as lost_kwh
     from sequenced
     where status = 'down'
@@ -42,6 +42,7 @@ select
     started_at,
     restored_at,
     restored_at is null                                           as is_open,
+    last_down_at,
     date_diff('minute', started_at, coalesce(restored_at, last_down_at)) / 60.0
                                                                   as duration_hours,
     down_intervals * 5 / 60.0                                     as production_hours_down,

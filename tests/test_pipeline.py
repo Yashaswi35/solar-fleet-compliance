@@ -87,14 +87,36 @@ def test_underperforming_inverter_is_flagged(con):
     assert 0.78 <= pi <= 0.83
 
 
-def test_site_wide_trip_is_detected_on_every_inverter(con):
+def test_site_wide_trip_is_one_site_ticket(con):
     found = tickets(con, "summary_prefix = 'Site-wide outage'")
-    assert len(found) == 6
-    assert {t[0].split("-")[2] for t in found} == {f"INV0{i}" for i in range(1, 7)}
+    assert [t[0] for t in found] == ["OUT-2107-ALL-202306261000"]
+    events = con.execute("""select events from fct_service_tickets
+                            where summary_prefix = 'Site-wide outage'""").fetchone()[0]
+    assert events == 6  # one event per inverter, grouped into one incident
+
+
+def test_monitoring_fault_is_not_downtime(con):
+    no_data = con.execute("""
+        select count(*) from int_inverter_intervals
+        where site_id = 2107 and status = 'no_data'
+          and ts >= '2023-07-06 10:00' and ts < '2023-07-06 12:00'
+    """).fetchone()[0]
+    assert no_data >= 6 * 20
+    assert tickets(con, "site_id = 2107 and opened_at::date = '2023-07-06'") == []
+
+
+def test_utc_meter_is_aligned_to_local_time(con):
+    gap = con.execute("""
+        select avg(abs(meter_norm_power - site_norm_power))
+        from int_site_intervals
+        where site_id = 2107 and window_type = 'irradiance' and not is_monitoring_fault
+          and not is_site_outage and meter_norm_power is not null
+    """).fetchone()[0]
+    assert gap < 0.1  # misaligned by hours, this would be large
 
 
 def test_total_outage_ticket_count(con):
-    assert len(tickets(con, "ticket_type = 'outage'")) == 8
+    assert len(tickets(con, "ticket_type = 'outage'")) == 3
 
 
 def test_breach_month_is_flagged(con):

@@ -12,3 +12,5 @@ sources:
         description: Mean AC power per inverter per 5-minute bucket.
       - name: site_irradiance
         description: Plane-of-array irradiance per site per 5-minute bucket (W/m2).
+      - name: site_meter
+        description: Site revenue meter AC power per 5-minute bucket (kW).

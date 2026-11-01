@@ -23,6 +23,12 @@ vars:
   down_threshold: 0.02
   # Site-wide outage: inside an irradiance window, the median inverter is below this.
   site_outage_norm: 0.005
+  # If the revenue meter shows at least this share of its capacity while every
+  # inverter reads zero, the interval is a monitoring fault, not an outage.
+  meter_producing_norm: 0.05
+  # Outage events on the same inverter separated by less than this many hours
+  # are one incident (one ticket), e.g. an inverter tripping repeatedly in the heat.
+  incident_merge_hours: 2
   # Robust nameplate proxy: this quantile of an inverter's observed AC power.
   capacity_quantile: 0.995
   # An outage becomes a service ticket after this many consecutive down intervals.

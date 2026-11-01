@@ -22,6 +22,7 @@ sites:
     layout: wide_power
     timestamp_column: measured_on
     value_regex: '^inv_(\d+)_ac_power_inv_\d+$'
+    timezone: America/Los_Angeles
     power_units: kW
     prefix: pvdaq/2023-solar-data-prize/2107_OEDI
     files:
@@ -34,13 +35,20 @@ sites:
         - data/2107_irradiance_data.csv
         - data/2107_irradiance_data_2024.csv
         - data/2107_irradiance_15m_data_2025.csv
+    meter:
+      value_regex: '^meter'
+      files:
+        - data/2107_meter_15m_data.csv
+        - data/2107_meter_15m_data_2024.csv
+        - data/2107_meter_15m_data_2025.csv
     metadata: metadata/2107_system_metadata.json
 
   - site_id: 9068
-    label: Site 9068 (single-axis tracker)
+    label: Site 9068 (single-axis tracker, 2 central inverters reported as 8 inverter modules)
     layout: wide_power
     timestamp_column: measured_on
-    value_regex: '(?i)^inv(?:erter)?[_ ]?([\d.]+)_.*ac_?power'
+    value_regex: '^inverter_module_(\d+\.\d+)_ac_power_\(kw\)'
+    meter_regex: '^meter_ac_power_\(kw\)'
     power_units: kW
     prefix: pvdaq/2023-solar-data-prize/9068_OEDI
     files:
@@ -51,4 +59,8 @@ sites:
       files:
         - data/9068_irradiance_data.csv
         - data/9068_irradiance_data_20240101_20250430.csv
+    meter:
+      value_regex: '^meter_ac_power_\(kw\)'
+      files:
+        - data/9068_meter_data_20240101_20250430.csv
     metadata: metadata/9068_system_metadata.json

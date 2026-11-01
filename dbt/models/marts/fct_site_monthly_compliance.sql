@@ -16,12 +16,12 @@ with site_month as (
 ),
 
 events as (
-    select e.site_id, date_trunc('month', e.started_at) as month,
+    select i.site_id, date_trunc('month', i.started_at) as month,
            count(*)                                                    as outage_events,
-           count(*) filter (where e.duration_hours > c.max_restore_hours) as restore_sla_breaches
-    from {{ ref('int_outage_events') }} e
+           count(*) filter (where i.duration_hours > c.max_restore_hours) as restore_sla_breaches
+    from {{ ref('int_outage_incidents') }} i
     join {{ ref('contract_terms') }} c using (site_id)
-    where e.down_intervals >= {{ var('min_event_intervals') }}
+    where i.down_intervals >= {{ var('min_event_intervals') }}
     group by all
 ),
 

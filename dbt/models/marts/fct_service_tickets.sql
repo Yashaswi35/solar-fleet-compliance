@@ -2,21 +2,26 @@
 -- to a ticketing system such as Jira (see integrations/jira_push.py).
 with outages as (
     select
-        'OUT-' || e.event_id                       as ticket_id,
+        'OUT-' || i.incident_id                    as ticket_id,
         'outage'                                   as ticket_type,
-        e.site_id, e.inverter_id, e.asset_id,
-        e.started_at                               as opened_at,
-        e.restored_at                              as closed_at,
-        e.is_open,
-        e.duration_hours,
-        e.lost_kwh,
+        i.site_id, i.inverter_id, i.asset_id,
+        i.started_at                               as opened_at,
+        case when i.is_open then null else i.ended_at end as closed_at,
+        i.is_open,
+        i.events,
+        i.duration_hours,
+        i.lost_kwh,
         c.max_restore_hours                        as sla_hours,
-        e.duration_hours > c.max_restore_hours     as sla_breached,
-        case when e.site_wide then 'Site-wide outage' else 'Inverter outage' end as summary_prefix,
+        i.duration_hours > c.max_restore_hours     as sla_breached,
+        case
+            when i.scope = 'site' then 'Site-wide outage'
+            when i.events > 1 then 'Recurring inverter trips'
+            else 'Inverter outage'
+        end                                        as summary_prefix,
         null::double                               as performance_index
-    from {{ ref('int_outage_events') }} e
+    from {{ ref('int_outage_incidents') }} i
     join {{ ref('contract_terms') }} c using (site_id)
-    where e.down_intervals >= {{ var('min_event_intervals') }}
+    where i.down_intervals >= {{ var('min_event_intervals') }}
 ),
 
 underperformance as (
@@ -27,6 +32,7 @@ underperformance as (
         m.month                                    as opened_at,
         null::timestamp                            as closed_at,
         false                                      as is_open,
+        null::bigint                               as events,
         null::double                               as duration_hours,
         greatest(m.available_expected_kwh - m.available_kwh, 0) as lost_kwh,
         null::double                               as sla_hours,

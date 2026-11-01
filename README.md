@@ -15,7 +15,7 @@ It mirrors three jobs of a commercial energy service operations team:
 | Site | Description | Status |
 |---|---|---|
 | 2107 | Farm Solar Array, Arbuckle CA. 893 kW DC, 24 ABB TRIO-27.6 string inverters on one fixed-tilt, south-facing ground mount, with a plane-of-array irradiance sensor. Nov 2017 to Dec 2025 | Included |
-| 9068 | Single-axis tracker site with inverter AC power and irradiance files | Included when the loader's schema check passes (see `reports/schema_profile.md`) |
+| 9068 | Single-axis tracker plant. 2 central inverters, each reported as 4 inverter modules (8 assets), 2 plane-of-array pyranometers and a revenue meter. Aug 2017 to Apr 2025 | Included |
 | 2105 | Maui Ocean Center, 110 kW DC rooftop | **Excluded after validation.** Its 11 channels are strings on roof faces with different azimuth and tilt, so peer comparison is not meaningful, and its energy channel did not convert to power consistent with the system size |
 
 ## Results
@@ -37,11 +37,12 @@ flowchart LR
     D --> E[int_site_intervals<br/>production windows]
     E --> F[int_inverter_intervals<br/>available / down / no_data]
     F --> G[int_outage_events<br/>gaps and islands]
+    G --> G2[int_outage_incidents<br/>recurring trips, site-wide]
     F --> H[fct_inverter_monthly]
-    G --> I[fct_service_tickets]
+    G2 --> I[fct_service_tickets]
     H --> I
     H --> J[fct_site_monthly_compliance]
-    G --> J
+    G2 --> J
     I --> K[Streamlit dashboard]
     J --> K
     I -->|integrations/jira_push.py| L[Jira]
@@ -53,21 +54,23 @@ flowchart LR
 | Metric | Definition |
 |---|---|
 | Production window | A 5-minute interval with plane-of-array irradiance of at least 200 W/m2, which is how O&M availability is usually measured. Where no irradiance reading exists, the median of the site's reporting inverters must be at least 20% of capacity |
-| Site-wide outage | Every reporting inverter near zero inside an irradiance window. Expected energy then comes from the site's normal output per unit of irradiance that month |
+| Site-wide outage | Every reporting inverter near zero inside an irradiance window, and the revenue meter agrees. Expected energy then comes from the site's normal output per unit of irradiance that month |
+| Monitoring fault | Every inverter reads zero but the revenue meter shows the site producing. Treated as missing data, not downtime |
 | Inverter status | **available** if producing; **down** if under 2% of capacity during a production window; **no_data** if no reading arrived (a monitoring gap, not downtime) |
 | Time availability | available / (available + down) intervals |
 | Energy availability | actual energy / (actual energy + estimated lost energy) |
 | Lost energy | For each down interval, what peers (or the site's typical profile, for site-wide outages) imply the inverter should have produced |
 | Data availability | Intervals with a reading / production-window intervals |
-| Outage event | Consecutive down intervals per inverter. Nights are not production windows, so an inverter still down the next morning stays in one event. Events of 30 minutes or more become tickets |
+| Outage event | Consecutive down intervals per inverter. Nights are not production windows, so an inverter still down the next morning stays in one event |
+| Incident (ticket) | Outage events on one inverter less than 2 hours apart are one incident, so an inverter tripping repeatedly in the afternoon heat is one ticket, not twenty. Site-wide events across all inverters are one site ticket. Incidents with 30 minutes or more of downtime become tickets |
 | Performance index | Energy produced while available / energy implied by peers. Under 0.90 for a month opens an underperformance ticket |
 
 Capacity is a proxy: the 99.5th percentile of each inverter's observed AC power.
 
 ### Tests
 
-- **dbt:** 43 tests covering keys, accepted statuses, ratio ranges, referential integrity, non-overlapping events, energy reconciliation between site and inverter tables, and every ticket tracing back to an event.
-- **pytest:** [`tests/make_fixtures.py`](tests/make_fixtures.py) writes small files in the exact raw schemas with injected faults: an overnight outage, a 100-hour outage that breaches the SLA, a 15-minute dip that should not open a ticket, a communications gap that should not count as downtime, an inverter running at 80% of its peers, a site-wide trip, and an inverter that wakes up late every morning below the irradiance threshold (which must not open tickets). [`tests/test_pipeline.py`](tests/test_pipeline.py) checks that the pipeline finds each one and nothing else.
+- **dbt:** 46 tests covering keys, accepted statuses, ratio ranges, referential integrity, non-overlapping events, energy reconciliation between site and inverter tables, and every ticket tracing back to an incident and its events.
+- **pytest:** [`tests/make_fixtures.py`](tests/make_fixtures.py) writes small files in the exact raw schemas with injected faults: an overnight outage, a 100-hour outage that breaches the SLA, a 15-minute dip that should not open a ticket, a communications gap that should not count as downtime, an inverter running at 80% of its peers, a site-wide trip that must become one site ticket, a monitoring fault where every inverter reads zero while the revenue meter shows production, an inverter that wakes up late every morning below the irradiance threshold, and a meter file stamped in UTC that must line up with local-time inverter data. [`tests/test_pipeline.py`](tests/test_pipeline.py) checks that the pipeline finds each one and nothing else.
 
 The pipeline also publishes the processed 5-minute tables to the `data-snapshot` branch, so the analysis can be rerun without the 800 MB download.
 

@@ -16,10 +16,15 @@ sites:
     prefix: pvdaq/2023-solar-data-prize/2107_OEDI
     files:
       - data/2107_electrical_data.csv
+    timezone: America/Los_Angeles
     irradiance:
       value_regex: '^poa_irradiance'
       files:
         - data/2107_irradiance_data.csv
+    meter:
+      value_regex: '^meter'
+      files:
+        - data/2107_meter_15m_data.csv
 
   - site_id: 2105
     label: Site 2105

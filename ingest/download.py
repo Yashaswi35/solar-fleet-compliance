@@ -54,6 +54,7 @@ def main(argv: list[str] | None = None) -> int:
         for site in cfg["sites"]:
             keys = (list(site["files"])
                     + list((site.get("irradiance") or {}).get("files", []))
+                    + list((site.get("meter") or {}).get("files", []))
                     + ([site["metadata"]] if site.get("metadata") else []))
             for rel in keys:
                 url = f"{cfg['base_url']}/{site['prefix']}/{rel}"
@@ -62,7 +63,9 @@ def main(argv: list[str] | None = None) -> int:
                     status = fetch(session, url, dest)
                 except requests.RequestException as exc:
                     status = f"error: {exc}"
-                if status == "missing" or status.startswith("error"):
+                # Only inverter power files are required; irradiance, meter and
+                # metadata files are optional and a missing one is reported, not fatal.
+                if (status == "missing" or status.startswith("error")) and rel in site["files"]:
                     failures += 1
                 print(f"[{site['site_id']}] {Path(rel).name}: {status}", flush=True)
     if failures:
