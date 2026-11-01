@@ -1,0 +1,48 @@
+# Fleet definition: NREL PVDAQ 2023 Solar Data Prize sites (public, US).
+# Source bucket: s3://oedi-data-lake (anonymous HTTPS access).
+#
+# layout:
+#   wide_power          one CSV holds AC power for many inverters (one column per inverter)
+#   per_inverter_energy one CSV per inverter holding AC energy (kWh) per reading
+#
+# The column regex must capture the inverter number in group 1.
+
+base_url: https://oedi-data-lake.s3.amazonaws.com
+raw_dir: data/raw
+processed_dir: data/processed
+
+sites:
+  - site_id: 2107
+    label: Site 2107
+    utc_offset_hours: -8
+    layout: wide_power
+    timestamp_column: measured_on
+    value_regex: '^inv_(\d+)_ac_power_inv_\d+$'
+    power_units: kW
+    prefix: pvdaq/2023-solar-data-prize/2107_OEDI
+    files:
+      - data/2107_electrical_data.csv
+      - data/2107_electrical_data_2024.csv
+      - data/2107_electrical_data_2025.csv
+    metadata: metadata/2107_system_metadata.json
+
+  - site_id: 2105
+    label: Site 2105
+    utc_offset_hours: -10
+    layout: per_inverter_energy
+    timestamp_column: measured_on
+    value_regex: '^inv_string(\d+)_ac_output_\(kwh\)_inv_\d+$'
+    prefix: pvdaq/2023-solar-data-prize/2105_OEDI
+    files:
+      - data/2105_inv01_data.csv
+      - data/2105_inv02_data.csv
+      - data/2105_inv03_data.csv
+      - data/2105_inv04_data.csv
+      - data/2105_inv05_data.csv
+      - data/2105_inv06_data.csv
+      - data/2105_inv07_data.csv
+      - data/2105_inv08_data.csv
+      - data/2105_inv09_data.csv
+      - data/2105_inv10_data.csv
+      - data/2105_inv11_data.csv
+    metadata: metadata/2105_system_metadata.json

@@ -1,0 +1,31 @@
+# Test configuration: same sites and schemas as sites.yml, pointed at the
+# synthetic fixtures from tests/make_fixtures.py. Used by CI only.
+
+base_url: https://oedi-data-lake.s3.amazonaws.com
+raw_dir: tests/fixtures/raw
+processed_dir: data/ci_processed
+
+sites:
+  - site_id: 2107
+    label: Site 2107
+    utc_offset_hours: -8
+    layout: wide_power
+    timestamp_column: measured_on
+    value_regex: '^inv_(\d+)_ac_power_inv_\d+$'
+    power_units: kW
+    prefix: pvdaq/2023-solar-data-prize/2107_OEDI
+    files:
+      - data/2107_electrical_data.csv
+
+  - site_id: 2105
+    label: Site 2105
+    utc_offset_hours: -10
+    layout: per_inverter_energy
+    timestamp_column: measured_on
+    value_regex: '^inv_string(\d+)_ac_output_\(kwh\)_inv_\d+$'
+    prefix: pvdaq/2023-solar-data-prize/2105_OEDI
+    files:
+      - data/2105_inv01_data.csv
+      - data/2105_inv02_data.csv
+      - data/2105_inv03_data.csv
+      - data/2105_inv04_data.csv

@@ -1,0 +1,64 @@
+name: Refresh fleet data
+
+# Downloads the public NREL PVDAQ files, runs the dbt models and tests, and
+# commits the refreshed reports (marts, readout, schema profile, run log).
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 9 * * 1"   # Mondays 09:17 UTC
+  push:
+    branches: [main]
+    paths:
+      - "config/sites.yml"
+      - "ingest/**"
+      - "dbt/**"
+      - "analysis/**"
+      - "requirements.txt"
+      - ".github/workflows/pipeline.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pipeline
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      DBT_USE_COLORS: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+
+      - name: Restore raw data cache
+        uses: actions/cache@v4
+        with:
+          path: data/raw
+          key: pvdaq-raw-${{ hashFiles('config/sites.yml') }}
+
+      - name: Run pipeline
+        run: |
+          set -o pipefail
+          mkdir -p reports/logs
+          make all 2>&1 | tee reports/logs/pipeline.log
+
+      - name: Commit reports
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add reports
+          if git diff --cached --quiet; then
+            echo "No report changes"
+          else
+            git commit -m "Refresh reports from NREL PVDAQ data [skip ci]"
+            git pull --rebase origin main
+            git push
+          fi

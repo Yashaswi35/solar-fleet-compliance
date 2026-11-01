@@ -1,0 +1,161 @@
+version: 2
+
+seeds:
+  - name: contract_terms
+    description: Illustrative O&M contract terms per site (not real contracts).
+    columns:
+      - name: site_id
+        data_tests: [unique, not_null]
+      - name: min_time_availability
+        data_tests:
+          - between:
+              arguments: {min_value: 0, max_value: 1}
+      - name: min_energy_availability
+        data_tests:
+          - between:
+              arguments: {min_value: 0, max_value: 1}
+
+models:
+  - name: stg_inverter_power
+    description: 5-minute AC power per inverter.
+    columns:
+      - name: asset_id
+        data_tests: [not_null]
+      - name: ac_kw
+        data_tests:
+          - between:
+              arguments: {min_value: 0, max_value: 100000}
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            columns: [asset_id, ts]
+
+  - name: int_inverter_capacity
+    description: Capacity proxy and observation window per inverter.
+    columns:
+      - name: asset_id
+        data_tests: [unique, not_null]
+      - name: capacity_kw
+        data_tests:
+          - not_null
+          - between:
+              arguments: {min_value: 0, max_value: 100000}
+
+  - name: int_site_intervals
+    description: Complete 5-minute grid per site with production-window classification.
+    columns:
+      - name: window_type
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['peer', 'site_outage', 'no_peers']
+      - name: reporting_inverters
+        data_tests: [not_null]
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            columns: [site_id, ts]
+
+  - name: int_inverter_intervals
+    description: Status of each inverter in each production window.
+    columns:
+      - name: status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['available', 'down', 'no_data']
+      - name: expected_kwh
+        data_tests: [not_null]
+
+  - name: int_outage_events
+    description: Consecutive down intervals grouped into outage events.
+    columns:
+      - name: event_id
+        data_tests: [unique, not_null]
+      - name: duration_hours
+        data_tests:
+          - not_null
+          - between:
+              arguments: {min_value: 0, max_value: 100000}
+      - name: lost_kwh
+        data_tests:
+          - between:
+              arguments: {min_value: 0, max_value: 100000000}
+
+  - name: dim_assets
+    description: One row per inverter in the fleet.
+    columns:
+      - name: asset_id
+        data_tests: [unique, not_null]
+
+  - name: fct_inverter_monthly
+    description: Monthly availability, energy and performance per inverter.
+    columns:
+      - name: asset_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_assets')
+                field: asset_id
+      - name: time_availability
+        data_tests:
+          - between:
+              arguments: {min_value: 0, max_value: 1}
+      - name: data_availability
+        data_tests:
+          - between:
+              arguments: {min_value: 0, max_value: 1}
+      - name: performance_index
+        data_tests:
+          - between:
+              arguments: {min_value: 0, max_value: 2}
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            columns: [asset_id, month]
+
+  - name: fct_site_monthly_compliance
+    description: Site-month scorecard against contract terms.
+    columns:
+      - name: compliance_status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['compliant', 'breach', 'insufficient_data']
+      - name: energy_availability
+        data_tests:
+          - between:
+              arguments: {min_value: 0, max_value: 1}
+      - name: shortfall_kwh
+        data_tests:
+          - between:
+              arguments: {min_value: 0, max_value: 100000000}
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            columns: [site_id, month]
+
+  - name: fct_service_tickets
+    description: Outage and underperformance tickets generated from telemetry.
+    columns:
+      - name: ticket_id
+        data_tests: [unique, not_null]
+      - name: ticket_type
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['outage', 'underperformance']
+      - name: priority
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['High', 'Medium', 'Low']
+      - name: asset_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_assets')
+                field: asset_id

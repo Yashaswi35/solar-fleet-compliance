@@ -1,0 +1,9 @@
+solar_compliance:
+  target: local
+  outputs:
+    local:
+      type: duckdb
+      path: "{{ env_var('FLEET_DB', 'data/fleet.duckdb') }}"
+      threads: 4
+      settings:
+        preserve_insertion_order: false

@@ -1,0 +1,3 @@
+contract_id,site_id,min_time_availability,min_energy_availability,min_data_availability,max_restore_hours,ld_rate_usd_per_kwh,term_source
+OM-2107,2107,0.98,0.985,0.95,72,0.10,illustrative
+OM-2105,2105,0.98,0.985,0.95,72,0.10,illustrative
