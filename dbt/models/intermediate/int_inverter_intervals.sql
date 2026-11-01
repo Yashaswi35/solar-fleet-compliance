@@ -9,6 +9,8 @@ select
     w.ts,
     w.month,
     w.window_type,
+    w.is_site_outage,
+    w.poa_wm2,
     c.capacity_kw,
     p.ac_kw,
     case

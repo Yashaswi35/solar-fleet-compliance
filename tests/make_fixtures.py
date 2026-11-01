@@ -9,6 +9,9 @@ Site 2107 (wide AC power, 6 inverters, 30 kW each)
   * INV05 communications gap for all of day 20 (no readings)          -> data gap, not downtime
   * INV04 runs at 80% of peers from day 30 (July)                      -> 1 underperformance ticket
   * every inverter trips on day 25 from 10:00 to 13:00                 -> 6 site-wide outage tickets
+  * INV06 wakes up at 07:30 every day, while irradiance is under 200 W/m2 -> no tickets
+  Site 2107 also gets a plane-of-array irradiance file; site 2105 has none, so it
+  exercises the peer-comparison fallback.
 Site 2105 (cumulative kWh per inverter file, 4 inverters, 40 kW each)
   * INV03 outage from day 5 08:00 to day 9 12:00 (> 72 h)            -> 1 outage ticket, SLA breach
 
@@ -47,7 +50,8 @@ def window(ts, d0, h0, d1, h1):
 
 def site_2107(out: Path) -> None:
     ts = pd.date_range(START, periods=DAYS * 288, freq="5min")
-    base = 30 * solar_shape(ts) * day_cloud(ts)
+    cloud = day_cloud(ts)
+    base = 30 * solar_shape(ts) * cloud
     df = pd.DataFrame({"measured_on": ts.strftime("%Y-%m-%d %H:%M:%S")})
     sensor = 149583
     for n in range(1, 7):
@@ -58,6 +62,9 @@ def site_2107(out: Path) -> None:
             p[window(ts, 3, 12, 3, 12.25)] = 0.0
         if n == 4:
             p[ts >= START + pd.Timedelta(days=30)] *= 0.80
+        if n == 6:
+            hour = np.asarray(ts.hour + ts.minute / 60)
+            p[(hour >= 6) & (hour < 7.5)] = 0.0  # wakes up late every morning, below 200 W/m2
         p[window(ts, 25, 10, 25, 13)] = 0.0  # site-wide trip, all inverters
         p = np.round(np.maximum(p, 0), 3).astype(object)
         if n == 5:
@@ -68,6 +75,12 @@ def site_2107(out: Path) -> None:
     df = df[[c for c in df.columns if c != "measured_on"] + ["measured_on"]]
     (out / "2107").mkdir(parents=True, exist_ok=True)
     df.to_csv(out / "2107" / "2107_electrical_data.csv", index=False)
+    irr = pd.DataFrame({
+        "measured_on": ts.strftime("%Y-%m-%d %H:%M:%S"),
+        "ambient_temp_o_149575": 25.0,
+        "poa_irradiance_o_149574": np.round(1000 * solar_shape(ts) * cloud, 1),
+    })
+    irr.to_csv(out / "2107" / "2107_irradiance_data.csv", index=False)
 
 
 def site_2105(out: Path) -> None:

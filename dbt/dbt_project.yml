@@ -11,17 +11,18 @@ target-path: "target"
 clean-targets: ["target", "dbt_packages"]
 
 vars:
-  # A 5-minute interval counts as a production window when the median normalized
-  # power of the site's reporting inverters is at least this value.
-  sun_up_threshold: 0.10
+  # A 5-minute interval is a production window when plane-of-array irradiance is
+  # at least this value (the usual way O&M availability is measured).
+  irradiance_threshold_wm2: 200
+  # Fallback when no irradiance reading exists: the median normalized power of the
+  # site's reporting inverters must be at least this value.
+  sun_up_threshold: 0.20
   # Inverters needed to judge an interval by peer comparison.
   min_peers: 3
   # Inside a production window, an inverter below this normalized power is down.
   down_threshold: 0.02
-  # Site-wide outage: every inverter near zero while the site's typical output
-  # for that month and time of day is at least typical_production_threshold.
+  # Site-wide outage: inside an irradiance window, the median inverter is below this.
   site_outage_norm: 0.005
-  typical_production_threshold: 0.30
   # Robust nameplate proxy: this quantile of an inverter's observed AC power.
   capacity_quantile: 0.995
   # An outage becomes a service ticket after this many consecutive down intervals.

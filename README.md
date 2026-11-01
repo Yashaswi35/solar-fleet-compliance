@@ -10,6 +10,14 @@ It mirrors three jobs of a commercial energy service operations team:
 
 > **Data:** NREL PVDAQ 2023 Solar Data Prize datasets (public, US). **Contract terms are illustrative** and live in [`dbt/seeds/contract_terms.csv`](dbt/seeds/contract_terms.csv).
 
+### Fleet
+
+| Site | Description | Status |
+|---|---|---|
+| 2107 | Farm Solar Array, Arbuckle CA. 893 kW DC, 24 ABB TRIO-27.6 string inverters on one fixed-tilt, south-facing ground mount, with a plane-of-array irradiance sensor. Nov 2017 to Dec 2025 | Included |
+| 9068 | Single-axis tracker site with inverter AC power and irradiance files | Included when the loader's schema check passes (see `reports/schema_profile.md`) |
+| 2105 | Maui Ocean Center, 110 kW DC rooftop | **Excluded after validation.** Its 11 channels are strings on roof faces with different azimuth and tilt, so peer comparison is not meaningful, and its energy channel did not convert to power consistent with the system size |
+
 ## Results
 
 The pipeline workflow writes these on every run:
@@ -44,7 +52,8 @@ flowchart LR
 
 | Metric | Definition |
 |---|---|
-| Production window | A 5-minute interval where the median normalized output of the site's reporting inverters is at least 10%, or where every inverter is near zero at a time the site normally produces (site-wide outage) |
+| Production window | A 5-minute interval with plane-of-array irradiance of at least 200 W/m2, which is how O&M availability is usually measured. Where no irradiance reading exists, the median of the site's reporting inverters must be at least 20% of capacity |
+| Site-wide outage | Every reporting inverter near zero inside an irradiance window. Expected energy then comes from the site's normal output per unit of irradiance that month |
 | Inverter status | **available** if producing; **down** if under 2% of capacity during a production window; **no_data** if no reading arrived (a monitoring gap, not downtime) |
 | Time availability | available / (available + down) intervals |
 | Energy availability | actual energy / (actual energy + estimated lost energy) |
@@ -58,7 +67,9 @@ Capacity is a proxy: the 99.5th percentile of each inverter's observed AC power.
 ### Tests
 
 - **dbt:** 43 tests covering keys, accepted statuses, ratio ranges, referential integrity, non-overlapping events, energy reconciliation between site and inverter tables, and every ticket tracing back to an event.
-- **pytest:** [`tests/make_fixtures.py`](tests/make_fixtures.py) writes small files in the exact raw schemas with injected faults: an overnight outage, a 100-hour outage that breaches the SLA, a 15-minute dip that should not open a ticket, a communications gap that should not count as downtime, an inverter running at 80% of its peers, and a site-wide trip. [`tests/test_pipeline.py`](tests/test_pipeline.py) checks that the pipeline finds each one and nothing else.
+- **pytest:** [`tests/make_fixtures.py`](tests/make_fixtures.py) writes small files in the exact raw schemas with injected faults: an overnight outage, a 100-hour outage that breaches the SLA, a 15-minute dip that should not open a ticket, a communications gap that should not count as downtime, an inverter running at 80% of its peers, a site-wide trip, and an inverter that wakes up late every morning below the irradiance threshold (which must not open tickets). [`tests/test_pipeline.py`](tests/test_pipeline.py) checks that the pipeline finds each one and nothing else.
+
+The pipeline also publishes the processed 5-minute tables to the `data-snapshot` branch, so the analysis can be rerun without the 800 MB download.
 
 ## Run it
 
@@ -77,7 +88,8 @@ The dashboard reads only `reports/marts/*.csv`, so it also runs straight from a 
 ## Limits
 
 - Contract terms, exclusions and liquidated-damages rates are illustrative, not from a real contract.
-- Expected energy comes from peer inverters, not an irradiance model, so a site-wide outage cannot be told apart from heavy snow cover.
+- Expected energy comes from peer inverters, or from the site's normal output per unit of irradiance during site-wide outages. It is not a full irradiance and temperature performance model.
+- Without an irradiance sensor, a site-wide outage cannot be detected from power data alone.
 - Capacity is inferred from observed output, not nameplate data.
 - Tickets are generated from telemetry. Real dispatch, repair and fault-code data would be needed to measure response times.
 

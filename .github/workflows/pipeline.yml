@@ -49,6 +49,22 @@ jobs:
           mkdir -p reports/logs
           make refresh 2>&1 | tee reports/logs/pipeline.log
 
+      - name: Publish processed 5-minute data to the data-snapshot branch
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          [ -d data/processed ] || exit 0
+          rm -rf /tmp/snap && mkdir -p /tmp/snap
+          cp -r data/processed /tmp/snap/processed
+          cd /tmp/snap
+          git init -q -b data-snapshot
+          git add -A
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898283+github-actions[bot]@users.noreply.github.com" \
+              commit -qm "Processed 5-minute data snapshot"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data-snapshot
+
       - name: Commit reports
         if: always()
         run: |

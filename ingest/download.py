@@ -52,7 +52,9 @@ def main(argv: list[str] | None = None) -> int:
     failures = 0
     with requests.Session() as session:
         for site in cfg["sites"]:
-            keys = list(site["files"]) + ([site["metadata"]] if site.get("metadata") else [])
+            keys = (list(site["files"])
+                    + list((site.get("irradiance") or {}).get("files", []))
+                    + ([site["metadata"]] if site.get("metadata") else []))
             for rel in keys:
                 url = f"{cfg['base_url']}/{site['prefix']}/{rel}"
                 dest = cfg["raw_dir"] / str(site["site_id"]) / Path(rel).name

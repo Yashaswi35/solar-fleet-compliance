@@ -104,3 +104,18 @@ def test_breach_month_is_flagged(con):
     """).fetchall())
     assert status["2105-202306"] == "breach"
     assert status["2105-202307"] == "compliant"
+
+
+def test_morning_wake_up_lag_is_not_an_outage(con):
+    found = tickets(con, "asset_id = '2107-INV06' and summary_prefix = 'Inverter outage'")
+    assert found == []
+
+
+def test_irradiance_drives_windows_where_available(con):
+    types = dict(con.execute("""
+        select site_id, string_agg(distinct window_type, ',' order by window_type)
+        from int_site_intervals where window_type is not null group by 1
+    """).fetchall())
+    assert types[2107] == "irradiance"
+    assert types[2105] == "peer"
+

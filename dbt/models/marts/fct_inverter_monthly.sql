@@ -10,8 +10,8 @@ with monthly as (
         count(*) filter (where status = 'no_data')                  as no_data_intervals,
         sum(actual_kwh)                                             as actual_kwh,
         sum(greatest(expected_kwh - actual_kwh, 0)) filter (where status = 'down') as lost_kwh,
-        sum(actual_kwh) filter (where status = 'available' and window_type = 'peer')   as available_kwh,
-        sum(expected_kwh) filter (where status = 'available' and window_type = 'peer') as available_expected_kwh
+        sum(actual_kwh) filter (where status = 'available' and not is_site_outage) as available_kwh,
+        sum(expected_kwh) filter (where status = 'available' and not is_site_outage) as available_expected_kwh
     from {{ ref('int_inverter_intervals') }}
     group by all
 )

@@ -1,8 +1,14 @@
-"""Reshape raw PVDAQ CSVs into one tidy table of 5-minute inverter AC power.
+"""Reshape raw PVDAQ CSVs into tidy 5-minute tables.
 
-Output: <processed_dir>/inverter_power/site_id=<id>/data.parquet with columns
-    site_id (int), inverter_id (varchar), ts (timestamp, site local standard time),
-    ac_kw (double, mean AC power over the 5-minute bucket)
+Outputs (one parquet file per site and year):
+    <processed_dir>/inverter_power/site_id=<id>/<year>.parquet
+        site_id (int), inverter_id (varchar), ts (timestamp, site local time),
+        ac_kw (double, mean AC power over the 5-minute bucket)
+    <processed_dir>/site_irradiance/site_id=<id>/data.parquet
+        site_id (int), ts (timestamp), poa_wm2 (double, plane-of-array irradiance)
+
+A site whose files cannot be read is skipped and reported, so one bad source
+does not stop the rest of the fleet.
 
 Two raw layouts are supported (see config/sites.yml):
   * wide_power: one file, one AC power column per inverter.
@@ -56,6 +62,7 @@ class SiteProfile:
     site_id: int
     files: list[FileProfile] = field(default_factory=list)
     stats: dict = field(default_factory=dict)
+    irradiance: dict = field(default_factory=dict)
     error: str = ""
 
 
@@ -65,7 +72,11 @@ def read_columns(con: duckdb.DuckDBPyConnection, path: Path) -> list[str]:
 
 
 def inverter_id(match: re.Match) -> str:
-    return f"INV{int(match.group(1)):02d}"
+    """INV07 for plain numbers, INV1.2 for dotted IDs such as block.inverter."""
+    g = match.group(1)
+    if g.isdigit():
+        return f"INV{int(g):02d}"
+    return "INV" + re.sub(r"[^0-9A-Za-z]+", ".", g).strip(".").upper()
 
 
 def load_wide_power(con, site: dict, files: list[Path], prof: SiteProfile) -> None:
@@ -155,13 +166,63 @@ def load_per_inverter_energy(con, site: dict, files: list[Path], prof: SiteProfi
 LOADERS = {"wide_power": load_wide_power, "per_inverter_energy": load_per_inverter_energy}
 
 
+def irradiance_files(site: dict) -> list[str]:
+    return list((site.get("irradiance") or {}).get("files", []))
+
+
+def load_irradiance(con, site: dict, raw_dir: Path, out_root: Path, prof: SiteProfile) -> None:
+    """Average the matching plane-of-array sensors into one 5-minute series.
+    Always writes a file (possibly empty) so downstream models can rely on it."""
+    sid = int(site["site_id"])
+    spec = site.get("irradiance") or {}
+    pattern = re.compile(spec.get("value_regex", "$^"), re.IGNORECASE)
+    ts_col = spec.get("timestamp_column", site["timestamp_column"])
+    con.execute("create or replace temp table raw_irr (reading_ts timestamp, poa_wm2 double)")
+    for rel in irradiance_files(site):
+        path = raw_dir / str(sid) / Path(rel).name
+        if not path.exists():
+            prof.files.append(FileProfile(path.name, 0, note="irradiance file missing"))
+            continue
+        cols = read_columns(con, path)
+        matched = [c for c in cols if pattern.search(c)]
+        prof.files.append(FileProfile(path.name, len(cols), matched=matched, sample_columns=cols[:40],
+                                      note="irradiance"))
+        if ts_col not in cols or not matched:
+            continue
+        avg = " + ".join(f"coalesce(try_cast({q(c)} as double), 0)" for c in matched)
+        n = " + ".join(f"(try_cast({q(c)} as double) is not null)::int" for c in matched)
+        con.execute(f"""
+            insert into raw_irr
+            select try_cast({q(ts_col)} as timestamp), ({avg}) / nullif({n}, 0)
+            from read_csv({lit(path)}, header = true, all_varchar = true)
+        """)
+    out_dir = out_root / "site_irradiance" / f"site_id={sid}"
+    if out_dir.exists():
+        shutil.rmtree(out_dir)
+    out_dir.mkdir(parents=True)
+    con.execute(f"""
+        copy (
+            select {sid}::integer as site_id,
+                   time_bucket({BUCKET}, reading_ts) as ts,
+                   round(avg(poa_wm2), 1) as poa_wm2
+            from raw_irr
+            where reading_ts is not null and poa_wm2 between -50 and 2000
+            group by all
+            order by ts
+        ) to {lit(out_dir / 'data.parquet')} (format parquet, compression zstd)
+    """)
+    row = con.execute(f"""select count(*), min(ts), max(ts), quantile_cont(poa_wm2, 0.99)
+                          from read_parquet({lit(out_dir / 'data.parquet')})""").fetchone()
+    prof.irradiance = dict(zip(["rows", "first_ts", "last_ts", "p99_wm2"], row))
+
+
 def write_samples(site: dict, raw_dir: Path, samples_dir: Path, lines: int = 15) -> None:
     """Keep the first lines of each raw file and the site metadata, so units and
     formats can be checked from the repository without the full download."""
     sid = str(site["site_id"])
     out = samples_dir / sid
     out.mkdir(parents=True, exist_ok=True)
-    for rel in site["files"]:
+    for rel in list(site["files"]) + irradiance_files(site):
         src = raw_dir / sid / Path(rel).name
         if src.exists():
             with open(src, errors="replace") as f:
@@ -179,21 +240,26 @@ def write_site(con, site_id: int, out_root: Path, prof: SiteProfile) -> None:
         shutil.rmtree(out_dir)
     out_dir.mkdir(parents=True)
     con.execute(f"""
-        copy (
-            select site_id, inverter_id,
-                   time_bucket({BUCKET}, reading_ts) as ts,
-                   avg(ac_kw) as ac_kw
-            from raw_power
-            where site_id = {site_id} and reading_ts is not null and ac_kw is not null
-              and isfinite(ac_kw)
-            group by all
-            order by inverter_id, ts
-        ) to {lit(out_dir / 'data.parquet')} (format parquet)
+        create or replace temp table site_power as
+        select site_id, inverter_id,
+               time_bucket({BUCKET}, reading_ts) as ts,
+               round(avg(ac_kw), 3) as ac_kw
+        from raw_power
+        where site_id = {site_id} and reading_ts is not null and ac_kw is not null
+          and isfinite(ac_kw)
+        group by all
     """)
-    row = con.execute(f"""
+    # One file per year keeps every file small enough for a git snapshot.
+    years = [r[0] for r in con.execute("select distinct year(ts) from site_power order by 1").fetchall()]
+    for y in years:
+        con.execute(f"""
+            copy (select * from site_power where year(ts) = {y} order by inverter_id, ts)
+            to {lit(out_dir / f'{y}.parquet')} (format parquet, compression zstd)
+        """)
+    row = con.execute("""
         select count(*), count(distinct inverter_id), min(ts), max(ts),
                quantile_cont(ac_kw, 0.5), quantile_cont(ac_kw, 0.99)
-        from read_parquet({lit(out_dir / 'data.parquet')})
+        from site_power
     """).fetchone()
     prof.stats = dict(zip(["rows", "inverters", "first_ts", "last_ts", "p50_kw", "p99_kw"], row))
 
@@ -211,6 +277,12 @@ def render_profile(profiles: list[SiteProfile]) -> str:
                 f"- 5-minute rows: {s['rows']:,} | inverters: {s['inverters']} | "
                 f"range: {s['first_ts']} to {s['last_ts']} | "
                 f"median AC kW: {s['p50_kw'] or 0:,.2f} | p99 AC kW: {s['p99_kw'] or 0:,.2f}")
+        ir = p.irradiance
+        if ir and ir.get("rows"):
+            lines.append(f"- irradiance rows: {ir['rows']:,} | range: {ir['first_ts']} to {ir['last_ts']} | "
+                         f"p99 POA: {ir['p99_wm2'] or 0:,.0f} W/m2")
+        elif ir is not None:
+            lines.append("- irradiance: none (peer comparison only)")
         lines.append("")
         lines.append("| File | Columns | Matched | Note |")
         lines.append("|---|---|---|---|")
@@ -253,9 +325,14 @@ def main(argv: list[str] | None = None) -> int:
         try:
             LOADERS[site["layout"]](con, site, files, prof)
             write_site(con, sid, cfg["processed_dir"], prof)
+            load_irradiance(con, site, cfg["raw_dir"], cfg["processed_dir"], prof)
         except duckdb.Error as exc:
             prof.error = f"{prof.error} {type(exc).__name__}: {exc}".strip()
-        print(f"[{sid}] {prof.stats or prof.error}", flush=True)
+        if not prof.stats or not prof.stats.get("rows"):
+            # Skip the site entirely rather than leave partial outputs behind.
+            for sub in ("inverter_power", "site_irradiance"):
+                shutil.rmtree(cfg["processed_dir"] / sub / f"site_id={sid}", ignore_errors=True)
+        print(f"[{sid}] {prof.stats or prof.error} {prof.irradiance or ''}", flush=True)
 
     profile_path = Path(args.profile)
     if not profile_path.is_absolute():
@@ -263,11 +340,11 @@ def main(argv: list[str] | None = None) -> int:
     profile_path.parent.mkdir(parents=True, exist_ok=True)
     profile_path.write_text(render_profile(profiles))
 
-    failed = [p.site_id for p in profiles if not p.stats or not p.stats.get("rows")]
-    if failed:
-        print(f"No usable data for site(s): {failed}. See {profile_path}")
-        return 1
-    return 0
+    usable = [p.site_id for p in profiles if p.stats and p.stats.get("rows")]
+    skipped = [p.site_id for p in profiles if p.site_id not in usable]
+    if skipped:
+        print(f"Skipped site(s) with no usable data: {skipped}. See {profile_path}")
+    return 0 if usable else 1
 
 
 if __name__ == "__main__":

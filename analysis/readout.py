@@ -16,6 +16,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import yaml
 
 
 def load(marts: Path) -> dict[str, pd.DataFrame]:
@@ -129,12 +130,23 @@ def drift(d: dict) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=["asset_id", "months", "slope_per_year", "latest_pi"])
 
 
-def render(h: dict, c: dict, s: pd.DataFrame, cv: dict, dr: pd.DataFrame) -> str:
+def site_labels(config: Path, site_ids) -> list[str]:
+    try:
+        sites = yaml.safe_load(config.read_text())["sites"]
+    except (OSError, KeyError, TypeError):
+        return [f"Site {s}" for s in site_ids]
+    labels = {int(x["site_id"]): x.get("label", f"Site {x['site_id']}") for x in sites}
+    return [labels.get(int(s), f"Site {s}") for s in site_ids]
+
+
+def render(h: dict, c: dict, s: pd.DataFrame, cv: dict, dr: pd.DataFrame, labels: list[str]) -> str:
     L = []
     L += ["# Solar Fleet Contract Compliance: Readout", ""]
-    L += [f"**Fleet:** {h['sites']} US commercial solar sites, {h['inverters']} inverters "
+    noun = "site" if h["sites"] == 1 else "sites"
+    L += [f"**Fleet:** {h['sites']} US commercial solar {noun}, {h['inverters']} inverters "
           f"(about {h['capacity_proxy_kw'] / 1000:,.2f} MW by observed peak AC), "
           f"{h['first_month']} to {h['last_month']}. Source: NREL PVDAQ 2023 Solar Data Prize data.", ""]
+    L += [f"- {label}" for label in labels] + [""]
     L += ["## Headline", ""]
     L += [f"- **{h['site_months_assessable']}** of {h['site_months']} site-months had enough data to assess. "
           f"**{h['site_months_compliant']}** met every contract term and **{h['site_months_breach']}** breached at least one."]
@@ -153,7 +165,7 @@ def render(h: dict, c: dict, s: pd.DataFrame, cv: dict, dr: pd.DataFrame) -> str
     L += ["**1. Downtime losses are concentrated in a few inverters.**"]
     if c["top_decile_share_of_lost_energy"] is not None:
         names = ", ".join(f"{a} ({v} MWh)" for a, v in c["top_assets"])
-        L += [f"The top {c['top_decile_assets']} inverters (10% of the fleet) account for "
+        L += [f"The top {c['top_decile_assets']} inverter(s) (10% of the fleet) account for "
               f"{pct(c['top_decile_share_of_lost_energy'])} of lost energy: {names}. "
               f"The 10 largest outages account for {pct(c['top10_events_share_of_outage_energy'])} of outage losses."]
     L += [""]
@@ -193,7 +205,8 @@ def render(h: dict, c: dict, s: pd.DataFrame, cv: dict, dr: pd.DataFrame) -> str
           ""]
     L += ["**Contract terms are illustrative** (seeds/contract_terms.csv): 98% time availability, 98.5% energy "
           "availability, 95% data availability, restore within 72 hours, $0.10/kWh liquidated damages. "
-          "A site-wide outage cannot be told apart from heavy snow cover using power data alone.", ""]
+          "Production windows use plane-of-array irradiance of at least 200 W/m2 where a sensor exists, "
+          "and peer comparison otherwise.", ""]
     return "\n".join(L)
 
 
@@ -201,12 +214,14 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--marts", default="reports/marts")
     ap.add_argument("--out", default="reports")
+    ap.add_argument("--config", default="config/sites.yml")
     args = ap.parse_args(argv)
     d = load(Path(args.marts))
+    labels = site_labels(Path(args.config), sorted(d["assets"]["site_id"].unique()))
     h, c, s, cv, dr = headline(d), concentration(d), seasonality(d), comms_vs_downtime(d), drift(d)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    (out / "readout.md").write_text(render(h, c, s, cv, dr))
+    (out / "readout.md").write_text(render(h, c, s, cv, dr, labels))
     summary = {"headline": h, "concentration": c, "comms_vs_downtime": cv,
                "drifting_inverters": int((dr["slope_per_year"] <= -0.01).sum()) if len(dr) else 0}
     (out / "summary.json").write_text(json.dumps(summary, indent=2, default=str))

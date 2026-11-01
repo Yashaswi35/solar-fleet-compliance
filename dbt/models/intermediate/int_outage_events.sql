@@ -27,7 +27,7 @@ events as (
         max(ts) + interval 5 minute                    as last_down_at,
         min(next_available_ts)                         as restored_at,
         count(*)                                       as down_intervals,
-        bool_or(window_type = 'site_outage')           as site_wide,
+        bool_or(is_site_outage)           as site_wide,
         sum(greatest(expected_kwh - actual_kwh, 0))    as lost_kwh
     from sequenced
     where status = 'down'

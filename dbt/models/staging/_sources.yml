@@ -3,14 +3,12 @@ version: 2
 sources:
   - name: pvdaq
     description: >
-      5-minute inverter AC power produced by ingest/load.py from the NREL PVDAQ
-      2023 Solar Data Prize files (public, OEDI data lake).
+      5-minute tables produced by ingest/load.py from the NREL PVDAQ 2023 Solar
+      Data Prize files (public, OEDI data lake).
     meta:
-      external_location: "read_parquet('{{ env_var('FLEET_PROCESSED', 'data/processed') }}/{name}/*/*.parquet', hive_partitioning = false)"
+      external_location: "read_parquet('{{ env_var('FLEET_PROCESSED', 'data/processed') }}/{name}/*/*.parquet', hive_partitioning = false, union_by_name = true)"
     tables:
       - name: inverter_power
-        columns:
-          - name: site_id
-          - name: inverter_id
-          - name: ts
-          - name: ac_kw
+        description: Mean AC power per inverter per 5-minute bucket.
+      - name: site_irradiance
+        description: Plane-of-array irradiance per site per 5-minute bucket (W/m2).
