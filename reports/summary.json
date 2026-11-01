@@ -1,0 +1,56 @@
+{
+  "headline": {
+    "sites": 2,
+    "inverters": 35,
+    "capacity_proxy_kw": 3481.1,
+    "first_month": "2017-11",
+    "last_month": "2025-12",
+    "inverter_months": 2874,
+    "site_months": 155,
+    "site_months_assessable": 152,
+    "site_months_compliant": 17,
+    "site_months_breach": 135,
+    "breaches_time_availability": 90,
+    "breaches_energy_availability": 88,
+    "breaches_data_availability": 58,
+    "breaches_restore_sla": 58,
+    "outage_tickets": 9453,
+    "site_wide_outage_tickets": 3962,
+    "restore_sla_breaches": 208,
+    "median_outage_hours": 1.3,
+    "underperformance_tickets": 328,
+    "actual_mwh": 34517.4,
+    "lost_mwh": 1334.42,
+    "fleet_energy_availability": 0.9628,
+    "illustrative_ld_usd": 99438.0
+  },
+  "concentration": {
+    "top_decile_assets": 4,
+    "top_decile_share_of_lost_energy": 0.22584326584101508,
+    "top_assets": [
+      [
+        "2105-INV05",
+        88.6
+      ],
+      [
+        "2107-INV07",
+        77.28
+      ],
+      [
+        "2107-INV06",
+        70.6
+      ],
+      [
+        "2107-INV02",
+        64.89
+      ]
+    ],
+    "top10_events_share_of_outage_energy": 0.07694275045968951
+  },
+  "comms_vs_downtime": {
+    "spearman_rho": -0.26636718497562456,
+    "breach_months": 135,
+    "data_only_breach_months": 37
+  },
+  "drifting_inverters": 9
+}
