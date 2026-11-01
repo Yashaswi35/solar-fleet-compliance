@@ -3,7 +3,7 @@ tests/fixtures/raw/
 dbt/target/
 dbt/logs/
 dbt/dbt_packages/
-logs/
+/logs/
 __pycache__/
 *.pyc
 .venv/

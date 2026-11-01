@@ -30,7 +30,8 @@ def con():
         DB.unlink()
     run(sys.executable, "-m", "tests.make_fixtures", "--out", "tests/fixtures/raw")
     run(sys.executable, "-m", "ingest.load", "--config", "config/sites.ci.yml",
-        "--profile", "data/ci_schema_profile.md")
+        "--profile", "data/ci_schema_profile.md",
+        "--samples-dir", "data/ci_samples")
     run("dbt", "build", "--project-dir", "dbt", "--profiles-dir", "dbt", env=env)
     connection = duckdb.connect(str(DB), read_only=True)
     yield connection

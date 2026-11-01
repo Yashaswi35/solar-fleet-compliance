@@ -140,7 +140,10 @@ def load_per_inverter_energy(con, site: dict, files: list[Path], prof: SiteProfi
             power = "dkwh / (dt_s / 3600.0)"
             where = "dt_s between 60 and 1200 and dkwh >= 0"
         else:
-            power = f"kwh / ({median_dt} / 3600.0)"
+            # Energy since the previous reading: divide by that reading's own
+            # interval. The first reading after a night gap uses the median step.
+            power = (f"kwh / (case when dt_s between 60 and 1200 then dt_s "
+                     f"else {median_dt} end / 3600.0)")
             where = "true"
         con.execute(f"""
             insert into raw_power
@@ -150,6 +153,24 @@ def load_per_inverter_energy(con, site: dict, files: list[Path], prof: SiteProfi
 
 
 LOADERS = {"wide_power": load_wide_power, "per_inverter_energy": load_per_inverter_energy}
+
+
+def write_samples(site: dict, raw_dir: Path, samples_dir: Path, lines: int = 15) -> None:
+    """Keep the first lines of each raw file and the site metadata, so units and
+    formats can be checked from the repository without the full download."""
+    sid = str(site["site_id"])
+    out = samples_dir / sid
+    out.mkdir(parents=True, exist_ok=True)
+    for rel in site["files"]:
+        src = raw_dir / sid / Path(rel).name
+        if src.exists():
+            with open(src, errors="replace") as f:
+                head = [next(f, "") for _ in range(lines)]
+            (out / f"{src.stem}.head.csv").write_text("".join(head))
+    if site.get("metadata"):
+        meta = raw_dir / sid / Path(site["metadata"]).name
+        if meta.exists():
+            shutil.copy(meta, out / meta.name)
 
 
 def write_site(con, site_id: int, out_root: Path, prof: SiteProfile) -> None:
@@ -207,8 +228,12 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", default="config/sites.yml")
     ap.add_argument("--profile", default="reports/schema_profile.md")
+    ap.add_argument("--samples-dir", default="reports/raw_samples")
     args = ap.parse_args(argv)
     cfg = load_config(args.config)
+    samples_dir = Path(args.samples_dir)
+    if not samples_dir.is_absolute():
+        samples_dir = ROOT / samples_dir
 
     con = duckdb.connect()
     con.execute("set preserve_insertion_order = false")
@@ -224,6 +249,7 @@ def main(argv: list[str] | None = None) -> int:
         if missing:
             prof.error = f"missing raw files: {', '.join(missing)}"
         files = [f for f in files if f.exists()]
+        write_samples(site, cfg["raw_dir"], samples_dir)
         try:
             LOADERS[site["layout"]](con, site, files, prof)
             write_site(con, sid, cfg["processed_dir"], prof)

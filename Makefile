@@ -3,7 +3,7 @@ DBT = dbt --no-use-colors
 export FLEET_DB ?= data/fleet.duckdb
 export FLEET_PROCESSED ?= data/processed
 
-.PHONY: setup data load build export readout all app test docs jira clean
+.PHONY: setup data load build export readout all refresh app test docs jira clean
 
 setup:            ## install dependencies
 	$(PY) -m pip install -r requirements.txt
@@ -24,6 +24,14 @@ readout:          ## write reports/readout.md and reports/summary.json
 	$(PY) -m analysis.readout
 
 all: data load build export readout
+
+refresh: data load  ## pipeline order: publish marts first, then run tests and record results
+	$(DBT) seed --project-dir dbt --profiles-dir dbt
+	$(DBT) run --project-dir dbt --profiles-dir dbt
+	$(PY) -m analysis.export
+	$(PY) -m analysis.readout
+	$(DBT) test --project-dir dbt --profiles-dir dbt; status=$$?; \
+	  $(PY) -m analysis.test_report; exit $$status
 
 app:              ## launch the dashboard
 	streamlit run app/streamlit_app.py
