@@ -70,7 +70,7 @@ with tab_score:
               f"{(assessable['compliance_status'] == 'compliant').mean():.0%}" if len(assessable) else "n/a",
               help="Share of assessable site-months meeting every contract term")
     c2.metric("Energy availability", f"{actual / (actual + lost):.2%}" if actual + lost else "n/a")
-    c3.metric("Lost energy", f"{lost / 1000:,.1f} MWh")
+    c3.metric("Lost energy", f"{lost / 1000:,.0f} MWh")
     c4.metric("Outage tickets", f"{len(outages):,}")
     c5.metric("Restore SLA breaches", f"{int(outages['sla_breached'].sum()):,}")
 
@@ -87,7 +87,9 @@ with tab_score:
     st.plotly_chart(fig, width="stretch")
 
     st.subheader("Time availability against the guarantee")
-    fig = px.line(grid, x="month", y="time_availability", color="site", markers=True)
+    st.caption("Assessable months only. Gaps are months without enough telemetry to score.")
+    trend = grid.assign(time_availability=grid["time_availability"].where(grid["is_assessable"]))
+    fig = px.line(trend, x="month", y="time_availability", color="site", markers=True)
     for g in site_f["min_time_availability"].unique():
         fig.add_hline(y=g, line_dash="dash", line_color="#C0392B",
                       annotation_text=f"Guarantee {g:.0%}", annotation_position="bottom right")

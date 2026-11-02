@@ -178,9 +178,9 @@ def render(h: dict, c: dict, s: pd.DataFrame, cv: dict, dr: pd.DataFrame, labels
     L += [f"- {h['recurring_trip_tickets']:,} of the outage tickets are recurring trips: an inverter dropping out "
           f"several times within a couple of hours, grouped into one ticket per incident."]
     if h.get("monitoring_fault_inverter_hours"):
-        L += [f"- {h['monitoring_fault_inverter_hours']:,} inverter-hours where every inverter read zero but the revenue "
+        L += [f"- {h['monitoring_fault_inverter_hours']:,.0f} inverter-hours where every inverter read zero but the revenue "
               f"meter showed production were treated as monitoring faults, not downtime."]
-    L += [f"- Fleet produced {h['actual_mwh']:,} MWh and lost an estimated {h['lost_mwh']:,} MWh to downtime "
+    L += [f"- Fleet produced {h['actual_mwh']:,.0f} MWh and lost an estimated {h['lost_mwh']:,.0f} MWh to downtime "
           f"(energy-based availability {pct(h['fleet_energy_availability'])}). "
           f"Illustrative liquidated-damages exposure: ${h['illustrative_ld_usd']:,.0f}.", ""]
 

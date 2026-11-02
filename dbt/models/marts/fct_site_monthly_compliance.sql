@@ -1,5 +1,10 @@
 -- Site-month scorecard against the O&M contract terms in seeds/contract_terms.csv.
 -- Contract terms are illustrative; see the README.
+-- A month is assessable only if readings cover at least half its production
+-- windows (data_availability) and the month has at least half the production
+-- windows the same calendar month usually has at that site (window_coverage).
+-- The second check catches months where the sensor and inverters both went
+-- silent, so there are almost no windows to measure against.
 with site_month as (
     select
         site_id, month,
@@ -36,6 +41,9 @@ scored as (
         c.ld_rate_usd_per_kwh,
         coalesce(e.outage_events, 0)          as outage_events,
         coalesce(e.restore_sla_breaches, 0)   as restore_sla_breaches,
+        s.window_intervals / nullif(s.inverters, 0)
+            / nullif(median(s.window_intervals / nullif(s.inverters, 0))
+                     over (partition by s.site_id, month(s.month)), 0)          as window_coverage,
         s.available_intervals / nullif(s.available_intervals + s.down_intervals, 0) as time_availability,
         s.actual_kwh / nullif(s.actual_kwh + s.lost_kwh, 0)                         as energy_availability,
         (s.available_intervals + s.down_intervals) / nullif(s.window_intervals, 0)  as data_availability
@@ -46,7 +54,8 @@ scored as (
 
 select
     *,
-    data_availability >= {{ var('min_month_data_coverage') }}           as is_assessable,
+    data_availability >= {{ var('min_month_data_coverage') }}
+        and window_coverage >= {{ var('min_month_data_coverage') }}     as is_assessable,
     time_availability >= min_time_availability                          as meets_time_availability,
     energy_availability >= min_energy_availability                      as meets_energy_availability,
     data_availability >= min_data_availability                          as meets_data_availability,
@@ -55,7 +64,8 @@ select
     greatest(min_energy_availability * (actual_kwh + lost_kwh) - actual_kwh, 0)
         * ld_rate_usd_per_kwh                                           as illustrative_ld_usd,
     case
-        when data_availability < {{ var('min_month_data_coverage') }} then 'insufficient_data'
+        when data_availability < {{ var('min_month_data_coverage') }}
+          or window_coverage < {{ var('min_month_data_coverage') }} then 'insufficient_data'
         when time_availability >= min_time_availability
          and energy_availability >= min_energy_availability
          and data_availability >= min_data_availability

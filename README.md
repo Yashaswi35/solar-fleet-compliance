@@ -6,7 +6,7 @@ It mirrors three jobs of a commercial energy service operations team:
 
 1. **Track contractual obligations:** monthly time availability, energy availability, data availability, and outage restore times, per site, against contract terms.
 2. **Automate the compliance analysis:** a dbt project on DuckDB with tested models, refreshed weekly by GitHub Actions.
-3. **Keep the code base reliable:** 43 dbt data tests, plus end-to-end pytest checks on fixtures with known injected faults, run on every push.
+3. **Keep the code base reliable:** 46 dbt data tests, plus end-to-end pytest checks on fixtures with known injected faults, run on every push.
 
 > **Data:** NREL PVDAQ 2023 Solar Data Prize datasets (public, US). **Contract terms are illustrative** and live in [`dbt/seeds/contract_terms.csv`](dbt/seeds/contract_terms.csv).
 
@@ -20,9 +20,19 @@ It mirrors three jobs of a commercial energy service operations team:
 
 ## Results
 
+![Compliance dashboard](docs/dashboard.png)
+
+Across 24.2 million 5-minute inverter readings from 32 inverters (Aug 2017 to Dec 2025):
+
+- **177 of 188 site-months** had enough telemetry to score. **68** met every contract term and **109** breached at least one, mostly on time and energy availability.
+- **25,912 outage events** were grouped into **3,401 service tickets** (51 site-wide). **195** stayed open past the 72-hour restore SLA. The fleet lost an estimated **1,627 MWh** to downtime, for **97.4%** energy availability.
+- **2,395 of the tickets are recurring trips.** At the Arbuckle site, string inverters drop out repeatedly in summer at full output and high irradiance, peaking at 620 incidents in 2022 and falling to 19 in 2024. That drop is consistent with a fix on those units.
+- **4 inverters (10% of the fleet) caused 38% of lost energy**, all of them modules of the tracker site's central inverters.
+- **14,392 inverter-hours** where every inverter read zero but the revenue meter showed production were classed as monitoring faults, not downtime. Counted as outages, they would have added about 344 MWh of false lost energy, over half of it from a logger failure in July 2021.
+
 The pipeline workflow writes these on every run:
 
-- [`reports/readout.md`](reports/readout.md): one-page readout with the headline numbers, four tested hypotheses, and what the data does and does not show
+- [`reports/readout.md`](reports/readout.md): one-page readout with the headline numbers, five tested hypotheses, and what the data does and does not show
 - [`reports/marts/`](reports/marts): scorecard, inverter-month, ticket and asset tables as CSV
 - [`reports/schema_profile.md`](reports/schema_profile.md): what the loader found in each raw file
 

@@ -7,13 +7,13 @@
     "last_month": "2025-12",
     "inverter_months": 2982,
     "site_months": 188,
-    "site_months_assessable": 183,
-    "site_months_compliant": 69,
-    "site_months_breach": 114,
-    "breaches_time_availability": 99,
-    "breaches_energy_availability": 100,
-    "breaches_data_availability": 26,
-    "breaches_restore_sla": 75,
+    "site_months_assessable": 177,
+    "site_months_compliant": 68,
+    "site_months_breach": 109,
+    "breaches_time_availability": 97,
+    "breaches_energy_availability": 98,
+    "breaches_data_availability": 23,
+    "breaches_restore_sla": 74,
     "outage_tickets": 3401,
     "site_wide_outage_tickets": 51,
     "restore_sla_breaches": 195,
@@ -24,7 +24,7 @@
     "actual_mwh": 60903.9,
     "lost_mwh": 1627.17,
     "fleet_energy_availability": 0.974,
-    "illustrative_ld_usd": 107484.0
+    "illustrative_ld_usd": 97015.0
   },
   "concentration": {
     "top_decile_assets": 4,
@@ -51,8 +51,8 @@
   },
   "comms_vs_downtime": {
     "spearman_rho": 0.3449282141194506,
-    "breach_months": 114,
-    "data_only_breach_months": 5
+    "breach_months": 109,
+    "data_only_breach_months": 2
   },
   "drifting_inverters": 5
 }

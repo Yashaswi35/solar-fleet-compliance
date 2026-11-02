@@ -7,12 +7,12 @@
 
 ## Headline
 
-- **183** of 188 site-months had enough data to assess. **69** met every contract term and **114** breached at least one.
-- Breaches by term: time availability 99, energy availability 100, data availability 26, restore SLA 75.
+- **177** of 188 site-months had enough data to assess. **68** met every contract term and **109** breached at least one.
+- Breaches by term: time availability 97, energy availability 98, data availability 23, restore SLA 74.
 - **3,401** outage tickets generated from telemetry (51 site-wide), median duration 5.7 h, **195** past the restore SLA. **233** underperformance tickets.
 - 2,395 of the outage tickets are recurring trips: an inverter dropping out several times within a couple of hours, grouped into one ticket per incident.
-- 14,391.6 inverter-hours where every inverter read zero but the revenue meter showed production were treated as monitoring faults, not downtime.
-- Fleet produced 60,903.9 MWh and lost an estimated 1,627.17 MWh to downtime (energy-based availability 97.4%). Illustrative liquidated-damages exposure: $107,484.
+- 14,392 inverter-hours where every inverter read zero but the revenue meter showed production were treated as monitoring faults, not downtime.
+- Fleet produced 60,904 MWh and lost an estimated 1,627 MWh to downtime (energy-based availability 97.4%). Illustrative liquidated-damages exposure: $97,015.
 
 ## Hypotheses
 
@@ -23,7 +23,7 @@ The top 4 inverter(s) (10% of the fleet) account for 38.2% of lost energy: 9068-
 Highest outage rates per 100 inverter-months: Jul (181.4), Jun (159.1), May (156.6). Lowest: 58.5.
 
 **3. Monitoring gaps and downtime happen together.**
-Rank correlation between an inverter-month's data-gap share and its downtime share: 0.34. 5 of 114 breach months failed only the data availability term, which points to monitoring rather than hardware for those months.
+Rank correlation between an inverter-month's data-gap share and its downtime share: 0.34. 2 of 109 breach months failed only the data availability term, which points to monitoring rather than hardware for those months.
 
 **4. Some inverters drift below their peers over time.**
 5 of 32 inverters with at least 12 assessable months lose 1% or more of peer-relative performance per year. Worst: 2107-INV15 (-4.5%/yr), 2107-INV21 (-1.6%/yr), 2107-INV10 (-1.4%/yr).
