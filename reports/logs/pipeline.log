@@ -19,60 +19,60 @@ python -m ingest.load
 [2107] {'rows': 18126706, 'inverters': 24, 'first_ts': datetime.datetime(2017, 11, 1, 0, 0), 'last_ts': datetime.datetime(2025, 12, 31, 17, 15), 'p50_kw': 0.0, 'p99_kw': 29.963} {'rows': 643777, 'first_ts': datetime.datetime(2017, 11, 1, 7, 10), 'last_ts': datetime.datetime(2025, 12, 31, 15, 45), 'p99_wm2': 1026.5}
 [9068] {'rows': 6100744, 'inverters': 8, 'first_ts': datetime.datetime(2017, 8, 23, 18, 15), 'last_ts': datetime.datetime(2025, 4, 30, 14, 20), 'p50_kw': 0.0, 'p99_kw': 472.5} {'rows': 792667, 'first_ts': datetime.datetime(2017, 8, 23, 17, 45), 'last_ts': datetime.datetime(2025, 4, 30, 14, 15), 'p99_wm2': 1013.2}
 dbt --no-use-colors seed --project-dir dbt --profiles-dir dbt
-19:31:10  Running with dbt=1.10.23
-19:31:10  This version of dbt is deprecated and no longer receives regular patches, including for known bugs. We recommend upgrading to a newer supported version of dbt: https://docs.getdbt.com/docs/dbt-versions
-19:31:11  Registered adapter: duckdb=1.10.1
-19:31:11  Unable to do partial parsing because saved manifest not found. Starting full parse.
-19:31:13  Found 12 models, 46 data tests, 1 seed, 3 sources, 488 macros
-19:31:13  
-19:31:13  Concurrency: 4 threads (target='local')
-19:31:13  
-19:31:13  1 of 1 START seed file main.contract_terms ..................................... [RUN]
-19:31:13  1 of 1 OK loaded seed file main.contract_terms ................................. [INSERT 3 in 0.08s]
-19:31:13  
-19:31:13  Finished running 1 seed in 0 hours 0 minutes and 0.22 seconds (0.22s).
-19:31:13  
-19:31:13  Completed successfully
-19:31:13  
-19:31:13  Done. PASS=1 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=1
+19:51:06  Running with dbt=1.10.23
+19:51:06  This version of dbt is deprecated and no longer receives regular patches, including for known bugs. We recommend upgrading to a newer supported version of dbt: https://docs.getdbt.com/docs/dbt-versions
+19:51:07  Registered adapter: duckdb=1.10.1
+19:51:07  Unable to do partial parsing because saved manifest not found. Starting full parse.
+19:51:09  Found 12 models, 46 data tests, 1 seed, 3 sources, 488 macros
+19:51:09  
+19:51:09  Concurrency: 4 threads (target='local')
+19:51:09  
+19:51:09  1 of 1 START seed file main.contract_terms ..................................... [RUN]
+19:51:09  1 of 1 OK loaded seed file main.contract_terms ................................. [INSERT 3 in 0.07s]
+19:51:09  
+19:51:09  Finished running 1 seed in 0 hours 0 minutes and 0.21 seconds (0.21s).
+19:51:09  
+19:51:09  Completed successfully
+19:51:09  
+19:51:09  Done. PASS=1 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=1
 dbt --no-use-colors run --project-dir dbt --profiles-dir dbt
-19:31:15  Running with dbt=1.10.23
-19:31:15  This version of dbt is deprecated and no longer receives regular patches, including for known bugs. We recommend upgrading to a newer supported version of dbt: https://docs.getdbt.com/docs/dbt-versions
-19:31:16  Registered adapter: duckdb=1.10.1
-19:31:16  Found 12 models, 46 data tests, 1 seed, 3 sources, 488 macros
-19:31:16  
-19:31:16  Concurrency: 4 threads (target='local')
-19:31:16  
-19:31:16  1 of 12 START sql view model main.stg_inverter_power ........................... [RUN]
-19:31:16  2 of 12 START sql view model main.stg_site_irradiance .......................... [RUN]
-19:31:16  3 of 12 START sql view model main.stg_site_meter ............................... [RUN]
-19:31:16  1 of 12 OK created sql view model main.stg_inverter_power ...................... [OK in 0.23s]
-19:31:16  2 of 12 OK created sql view model main.stg_site_irradiance ..................... [OK in 0.23s]
-19:31:16  3 of 12 OK created sql view model main.stg_site_meter .......................... [OK in 0.23s]
-19:31:16  4 of 12 START sql table model main.int_inverter_capacity ....................... [RUN]
-19:31:17  4 of 12 OK created sql table model main.int_inverter_capacity .................. [OK in 0.57s]
-19:31:17  5 of 12 START sql table model main.dim_assets .................................. [RUN]
-19:31:17  6 of 12 START sql table model main.int_site_intervals .......................... [RUN]
-19:31:17  5 of 12 OK created sql table model main.dim_assets ............................. [OK in 0.06s]
-19:31:20  6 of 12 OK created sql table model main.int_site_intervals ..................... [OK in 2.61s]
-19:31:20  7 of 12 START sql table model main.int_inverter_intervals ...................... [RUN]
-19:31:23  7 of 12 OK created sql table model main.int_inverter_intervals ................. [OK in 3.07s]
-19:31:23  8 of 12 START sql table model main.fct_inverter_monthly ........................ [RUN]
-19:31:23  9 of 12 START sql table model main.int_outage_events ........................... [RUN]
-19:31:23  8 of 12 OK created sql table model main.fct_inverter_monthly ................... [OK in 0.48s]
-19:31:25  9 of 12 OK created sql table model main.int_outage_events ...................... [OK in 2.18s]
-19:31:25  10 of 12 START sql table model main.int_outage_incidents ....................... [RUN]
-19:31:25  10 of 12 OK created sql table model main.int_outage_incidents .................. [OK in 0.06s]
-19:31:25  11 of 12 START sql table model main.fct_service_tickets ........................ [RUN]
-19:31:25  12 of 12 START sql table model main.fct_site_monthly_compliance ................ [RUN]
-19:31:25  11 of 12 OK created sql table model main.fct_service_tickets ................... [OK in 0.06s]
-19:31:25  12 of 12 OK created sql table model main.fct_site_monthly_compliance ........... [OK in 0.07s]
-19:31:25  
-19:31:25  Finished running 9 table models, 3 view models in 0 hours 0 minutes and 8.98 seconds (8.98s).
-19:31:25  
-19:31:25  Completed successfully
-19:31:25  
-19:31:25  Done. PASS=12 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=12
+19:51:11  Running with dbt=1.10.23
+19:51:11  This version of dbt is deprecated and no longer receives regular patches, including for known bugs. We recommend upgrading to a newer supported version of dbt: https://docs.getdbt.com/docs/dbt-versions
+19:51:11  Registered adapter: duckdb=1.10.1
+19:51:12  Found 12 models, 46 data tests, 1 seed, 3 sources, 488 macros
+19:51:12  
+19:51:12  Concurrency: 4 threads (target='local')
+19:51:12  
+19:51:12  1 of 12 START sql view model main.stg_inverter_power ........................... [RUN]
+19:51:12  2 of 12 START sql view model main.stg_site_irradiance .......................... [RUN]
+19:51:12  3 of 12 START sql view model main.stg_site_meter ............................... [RUN]
+19:51:12  3 of 12 OK created sql view model main.stg_site_meter .......................... [OK in 0.19s]
+19:51:12  2 of 12 OK created sql view model main.stg_site_irradiance ..................... [OK in 0.19s]
+19:51:12  1 of 12 OK created sql view model main.stg_inverter_power ...................... [OK in 0.20s]
+19:51:12  4 of 12 START sql table model main.int_inverter_capacity ....................... [RUN]
+19:51:13  4 of 12 OK created sql table model main.int_inverter_capacity .................. [OK in 0.61s]
+19:51:13  5 of 12 START sql table model main.dim_assets .................................. [RUN]
+19:51:13  6 of 12 START sql table model main.int_site_intervals .......................... [RUN]
+19:51:13  5 of 12 OK created sql table model main.dim_assets ............................. [OK in 0.05s]
+19:51:15  6 of 12 OK created sql table model main.int_site_intervals ..................... [OK in 2.74s]
+19:51:15  7 of 12 START sql table model main.int_inverter_intervals ...................... [RUN]
+19:51:19  7 of 12 OK created sql table model main.int_inverter_intervals ................. [OK in 3.28s]
+19:51:19  8 of 12 START sql table model main.fct_inverter_monthly ........................ [RUN]
+19:51:19  9 of 12 START sql table model main.int_outage_events ........................... [RUN]
+19:51:19  8 of 12 OK created sql table model main.fct_inverter_monthly ................... [OK in 0.45s]
+19:51:21  9 of 12 OK created sql table model main.int_outage_events ...................... [OK in 2.58s]
+19:51:21  10 of 12 START sql table model main.int_outage_incidents ....................... [RUN]
+19:51:21  10 of 12 OK created sql table model main.int_outage_incidents .................. [OK in 0.06s]
+19:51:21  11 of 12 START sql table model main.fct_service_tickets ........................ [RUN]
+19:51:21  12 of 12 START sql table model main.fct_site_monthly_compliance ................ [RUN]
+19:51:21  11 of 12 OK created sql table model main.fct_service_tickets ................... [OK in 0.07s]
+19:51:21  12 of 12 OK created sql table model main.fct_site_monthly_compliance ........... [OK in 0.07s]
+19:51:21  
+19:51:21  Finished running 9 table models, 3 view models in 0 hours 0 minutes and 9.71 seconds (9.71s).
+19:51:21  
+19:51:21  Completed successfully
+19:51:21  
+19:51:21  Done. PASS=12 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=12
 python -m analysis.export
 dim_assets: 32 rows -> reports/marts/dim_assets.csv
 fct_site_monthly_compliance: 188 rows -> reports/marts/fct_site_monthly_compliance.csv
@@ -108,111 +108,111 @@ python -m analysis.readout
 }
 dbt --no-use-colors test --project-dir dbt --profiles-dir dbt; status=$?; \
   python -m analysis.test_report; exit $status
-19:31:28  Running with dbt=1.10.23
-19:31:28  This version of dbt is deprecated and no longer receives regular patches, including for known bugs. We recommend upgrading to a newer supported version of dbt: https://docs.getdbt.com/docs/dbt-versions
-19:31:28  Registered adapter: duckdb=1.10.1
-19:31:29  Found 12 models, 46 data tests, 1 seed, 3 sources, 488 macros
-19:31:29  
-19:31:29  Concurrency: 4 threads (target='local')
-19:31:29  
-19:31:29  1 of 46 START test accepted_values_fct_service_tickets_priority__High__Medium__Low  [RUN]
-19:31:29  2 of 46 START test accepted_values_fct_service_tickets_ticket_type__outage__underperformance  [RUN]
-19:31:29  3 of 46 START test accepted_values_fct_site_monthly_compliance_compliance_status__compliant__breach__insufficient_data  [RUN]
-19:31:29  4 of 46 START test accepted_values_int_inverter_intervals_status__available__down__no_data  [RUN]
-19:31:29  2 of 46 PASS accepted_values_fct_service_tickets_ticket_type__outage__underperformance  [PASS in 0.15s]
-19:31:29  5 of 46 START test accepted_values_int_outage_incidents_scope__inverter__site .. [RUN]
-19:31:29  3 of 46 PASS accepted_values_fct_site_monthly_compliance_compliance_status__compliant__breach__insufficient_data  [PASS in 0.17s]
-19:31:29  1 of 46 PASS accepted_values_fct_service_tickets_priority__High__Medium__Low ... [PASS in 0.17s]
-19:31:29  6 of 46 START test accepted_values_int_site_intervals_window_type__irradiance__peer  [RUN]
-19:31:29  7 of 46 START test assert_energy_reconciles .................................... [RUN]
-19:31:29  4 of 46 PASS accepted_values_int_inverter_intervals_status__available__down__no_data  [PASS in 0.21s]
-19:31:29  8 of 46 START test assert_events_do_not_overlap ................................ [RUN]
-19:31:29  5 of 46 PASS accepted_values_int_outage_incidents_scope__inverter__site ........ [PASS in 0.07s]
-19:31:29  9 of 46 START test assert_tickets_reference_known_events ....................... [RUN]
-19:31:29  6 of 46 PASS accepted_values_int_site_intervals_window_type__irradiance__peer .. [PASS in 0.07s]
-19:31:29  10 of 46 START test between_contract_terms_min_energy_availability__1__0 ....... [RUN]
-19:31:29  7 of 46 PASS assert_energy_reconciles .......................................... [PASS in 0.07s]
-19:31:29  11 of 46 START test between_contract_terms_min_time_availability__1__0 ......... [RUN]
-19:31:29  10 of 46 PASS between_contract_terms_min_energy_availability__1__0 ............. [PASS in 0.04s]
-19:31:29  12 of 46 START test between_fct_inverter_monthly_data_availability__1__0 ....... [RUN]
-19:31:29  11 of 46 PASS between_contract_terms_min_time_availability__1__0 ............... [PASS in 0.05s]
-19:31:29  13 of 46 START test between_fct_inverter_monthly_performance_index__2__0 ....... [RUN]
-19:31:29  9 of 46 PASS assert_tickets_reference_known_events ............................. [PASS in 0.08s]
-19:31:29  14 of 46 START test between_fct_inverter_monthly_time_availability__1__0 ....... [RUN]
-19:31:29  12 of 46 PASS between_fct_inverter_monthly_data_availability__1__0 ............. [PASS in 0.06s]
-19:31:29  15 of 46 START test between_fct_site_monthly_compliance_energy_availability__1__0  [RUN]
-19:31:29  13 of 46 PASS between_fct_inverter_monthly_performance_index__2__0 ............. [PASS in 0.05s]
-19:31:29  16 of 46 START test between_fct_site_monthly_compliance_shortfall_kwh__100000000__0  [RUN]
-19:31:29  14 of 46 PASS between_fct_inverter_monthly_time_availability__1__0 ............. [PASS in 0.05s]
-19:31:29  17 of 46 START test between_int_inverter_capacity_capacity_kw__100000__0 ....... [RUN]
-19:31:29  15 of 46 PASS between_fct_site_monthly_compliance_energy_availability__1__0 .... [PASS in 0.05s]
-19:31:29  16 of 46 PASS between_fct_site_monthly_compliance_shortfall_kwh__100000000__0 .. [PASS in 0.04s]
-19:31:29  18 of 46 START test between_int_outage_events_duration_hours__100000__0 ........ [RUN]
-19:31:29  19 of 46 START test between_int_outage_events_lost_kwh__100000000__0 ........... [RUN]
-19:31:29  17 of 46 PASS between_int_inverter_capacity_capacity_kw__100000__0 ............. [PASS in 0.05s]
-19:31:29  20 of 46 START test between_stg_inverter_power_ac_kw__100000__0 ................ [RUN]
-19:31:29  18 of 46 PASS between_int_outage_events_duration_hours__100000__0 .............. [PASS in 0.06s]
-19:31:29  21 of 46 START test not_null_contract_terms_site_id ............................ [RUN]
-19:31:29  20 of 46 PASS between_stg_inverter_power_ac_kw__100000__0 ...................... [PASS in 0.05s]
-19:31:29  19 of 46 PASS between_int_outage_events_lost_kwh__100000000__0 ................. [PASS in 0.06s]
-19:31:29  22 of 46 START test not_null_dim_assets_asset_id ............................... [RUN]
-19:31:29  23 of 46 START test not_null_fct_inverter_monthly_asset_id ..................... [RUN]
-19:31:29  21 of 46 PASS not_null_contract_terms_site_id .................................. [PASS in 0.05s]
-19:31:29  22 of 46 PASS not_null_dim_assets_asset_id ..................................... [PASS in 0.04s]
-19:31:29  24 of 46 START test not_null_fct_service_tickets_ticket_id ..................... [RUN]
-19:31:29  25 of 46 START test not_null_fct_site_monthly_compliance_compliance_status ..... [RUN]
-19:31:29  23 of 46 PASS not_null_fct_inverter_monthly_asset_id ........................... [PASS in 0.06s]
-19:31:29  26 of 46 START test not_null_int_inverter_capacity_asset_id .................... [RUN]
-19:31:29  25 of 46 PASS not_null_fct_site_monthly_compliance_compliance_status ........... [PASS in 0.04s]
-19:31:29  24 of 46 PASS not_null_fct_service_tickets_ticket_id ........................... [PASS in 0.06s]
-19:31:29  27 of 46 START test not_null_int_inverter_capacity_capacity_kw ................. [RUN]
-19:31:29  26 of 46 PASS not_null_int_inverter_capacity_asset_id .......................... [PASS in 0.04s]
-19:31:29  28 of 46 START test not_null_int_inverter_intervals_expected_kwh ............... [RUN]
-19:31:29  29 of 46 START test not_null_int_inverter_intervals_status ..................... [RUN]
-19:31:29  28 of 46 PASS not_null_int_inverter_intervals_expected_kwh ..................... [PASS in 0.05s]
-19:31:29  27 of 46 PASS not_null_int_inverter_capacity_capacity_kw ....................... [PASS in 0.06s]
-19:31:29  29 of 46 PASS not_null_int_inverter_intervals_status ........................... [PASS in 0.05s]
-19:31:29  30 of 46 START test not_null_int_outage_events_duration_hours .................. [RUN]
-19:31:29  31 of 46 START test not_null_int_outage_events_event_id ........................ [RUN]
-19:31:29  32 of 46 START test not_null_int_outage_incidents_incident_id .................. [RUN]
-19:31:29  30 of 46 PASS not_null_int_outage_events_duration_hours ........................ [PASS in 0.05s]
-19:31:29  31 of 46 PASS not_null_int_outage_events_event_id .............................. [PASS in 0.05s]
-19:31:29  33 of 46 START test not_null_int_site_intervals_reporting_inverters ............ [RUN]
-19:31:29  34 of 46 START test not_null_stg_inverter_power_asset_id ....................... [RUN]
-19:31:29  32 of 46 PASS not_null_int_outage_incidents_incident_id ........................ [PASS in 0.07s]
-19:31:29  35 of 46 START test relationships_fct_inverter_monthly_asset_id__asset_id__ref_dim_assets_  [RUN]
-19:31:29  33 of 46 PASS not_null_int_site_intervals_reporting_inverters .................. [PASS in 0.06s]
-19:31:29  36 of 46 START test relationships_fct_service_tickets_asset_id__asset_id__ref_dim_assets_  [RUN]
-19:31:30  36 of 46 PASS relationships_fct_service_tickets_asset_id__asset_id__ref_dim_assets_  [PASS in 0.03s]
-19:31:30  35 of 46 PASS relationships_fct_inverter_monthly_asset_id__asset_id__ref_dim_assets_  [PASS in 0.08s]
-19:31:30  37 of 46 START test unique_combination_of_columns_fct_inverter_monthly_asset_id__month  [RUN]
-19:31:30  38 of 46 START test unique_combination_of_columns_fct_site_monthly_compliance_site_id__month  [RUN]
-19:31:30  37 of 46 PASS unique_combination_of_columns_fct_inverter_monthly_asset_id__month  [PASS in 0.05s]
-19:31:30  38 of 46 PASS unique_combination_of_columns_fct_site_monthly_compliance_site_id__month  [PASS in 0.05s]
-19:31:30  39 of 46 START test unique_combination_of_columns_int_site_intervals_site_id__ts  [RUN]
-19:31:30  40 of 46 START test unique_combination_of_columns_stg_inverter_power_asset_id__ts  [RUN]
-19:31:30  34 of 46 PASS not_null_stg_inverter_power_asset_id ............................. [PASS in 0.40s]
-19:31:30  41 of 46 START test unique_contract_terms_site_id .............................. [RUN]
-19:31:30  8 of 46 PASS assert_events_do_not_overlap ...................................... [PASS in 0.97s]
-19:31:30  42 of 46 START test unique_dim_assets_asset_id ................................. [RUN]
-19:31:30  39 of 46 PASS unique_combination_of_columns_int_site_intervals_site_id__ts ..... [PASS in 0.34s]
-19:31:30  43 of 46 START test unique_fct_service_tickets_ticket_id ....................... [RUN]
-19:31:30  42 of 46 PASS unique_dim_assets_asset_id ....................................... [PASS in 0.07s]
-19:31:30  41 of 46 PASS unique_contract_terms_site_id .................................... [PASS in 0.13s]
-19:31:30  44 of 46 START test unique_int_inverter_capacity_asset_id ...................... [RUN]
-19:31:30  45 of 46 START test unique_int_outage_events_event_id .......................... [RUN]
-19:31:30  43 of 46 PASS unique_fct_service_tickets_ticket_id ............................. [PASS in 0.08s]
-19:31:30  46 of 46 START test unique_int_outage_incidents_incident_id .................... [RUN]
-19:31:30  44 of 46 PASS unique_int_inverter_capacity_asset_id ............................ [PASS in 0.08s]
-19:31:30  46 of 46 PASS unique_int_outage_incidents_incident_id .......................... [PASS in 0.06s]
-19:31:30  45 of 46 PASS unique_int_outage_events_event_id ................................ [PASS in 0.10s]
-19:31:31  40 of 46 PASS unique_combination_of_columns_stg_inverter_power_asset_id__ts .... [PASS in 1.65s]
-19:31:31  
-19:31:31  Finished running 46 data tests in 0 hours 0 minutes and 2.69 seconds (2.69s).
-19:31:31  
-19:31:31  Completed successfully
-19:31:31  
-19:31:31  Done. PASS=46 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=46
+19:51:24  Running with dbt=1.10.23
+19:51:24  This version of dbt is deprecated and no longer receives regular patches, including for known bugs. We recommend upgrading to a newer supported version of dbt: https://docs.getdbt.com/docs/dbt-versions
+19:51:25  Registered adapter: duckdb=1.10.1
+19:51:25  Found 12 models, 46 data tests, 1 seed, 3 sources, 488 macros
+19:51:25  
+19:51:25  Concurrency: 4 threads (target='local')
+19:51:25  
+19:51:25  1 of 46 START test accepted_values_fct_service_tickets_priority__High__Medium__Low  [RUN]
+19:51:25  2 of 46 START test accepted_values_fct_service_tickets_ticket_type__outage__underperformance  [RUN]
+19:51:25  3 of 46 START test accepted_values_fct_site_monthly_compliance_compliance_status__compliant__breach__insufficient_data  [RUN]
+19:51:25  4 of 46 START test accepted_values_int_inverter_intervals_status__available__down__no_data  [RUN]
+19:51:26  3 of 46 PASS accepted_values_fct_site_monthly_compliance_compliance_status__compliant__breach__insufficient_data  [PASS in 0.17s]
+19:51:26  5 of 46 START test accepted_values_int_outage_incidents_scope__inverter__site .. [RUN]
+19:51:26  4 of 46 PASS accepted_values_int_inverter_intervals_status__available__down__no_data  [PASS in 0.18s]
+19:51:26  2 of 46 PASS accepted_values_fct_service_tickets_ticket_type__outage__underperformance  [PASS in 0.18s]
+19:51:26  1 of 46 PASS accepted_values_fct_service_tickets_priority__High__Medium__Low ... [PASS in 0.19s]
+19:51:26  6 of 46 START test accepted_values_int_site_intervals_window_type__irradiance__peer  [RUN]
+19:51:26  7 of 46 START test assert_energy_reconciles .................................... [RUN]
+19:51:26  8 of 46 START test assert_events_do_not_overlap ................................ [RUN]
+19:51:26  5 of 46 PASS accepted_values_int_outage_incidents_scope__inverter__site ........ [PASS in 0.07s]
+19:51:26  9 of 46 START test assert_tickets_reference_known_events ....................... [RUN]
+19:51:26  7 of 46 PASS assert_energy_reconciles .......................................... [PASS in 0.07s]
+19:51:26  6 of 46 PASS accepted_values_int_site_intervals_window_type__irradiance__peer .. [PASS in 0.07s]
+19:51:26  10 of 46 START test between_contract_terms_min_energy_availability__1__0 ....... [RUN]
+19:51:26  11 of 46 START test between_contract_terms_min_time_availability__1__0 ......... [RUN]
+19:51:26  11 of 46 PASS between_contract_terms_min_time_availability__1__0 ............... [PASS in 0.04s]
+19:51:26  12 of 46 START test between_fct_inverter_monthly_data_availability__1__0 ....... [RUN]
+19:51:26  9 of 46 PASS assert_tickets_reference_known_events ............................. [PASS in 0.08s]
+19:51:26  13 of 46 START test between_fct_inverter_monthly_performance_index__2__0 ....... [RUN]
+19:51:26  10 of 46 PASS between_contract_terms_min_energy_availability__1__0 ............. [PASS in 0.07s]
+19:51:26  14 of 46 START test between_fct_inverter_monthly_time_availability__1__0 ....... [RUN]
+19:51:26  12 of 46 PASS between_fct_inverter_monthly_data_availability__1__0 ............. [PASS in 0.07s]
+19:51:26  14 of 46 PASS between_fct_inverter_monthly_time_availability__1__0 ............. [PASS in 0.04s]
+19:51:26  15 of 46 START test between_fct_site_monthly_compliance_energy_availability__1__0  [RUN]
+19:51:26  16 of 46 START test between_fct_site_monthly_compliance_shortfall_kwh__100000000__0  [RUN]
+19:51:26  13 of 46 PASS between_fct_inverter_monthly_performance_index__2__0 ............. [PASS in 0.06s]
+19:51:26  17 of 46 START test between_int_inverter_capacity_capacity_kw__100000__0 ....... [RUN]
+19:51:26  17 of 46 PASS between_int_inverter_capacity_capacity_kw__100000__0 ............. [PASS in 0.04s]
+19:51:26  16 of 46 PASS between_fct_site_monthly_compliance_shortfall_kwh__100000000__0 .. [PASS in 0.06s]
+19:51:26  18 of 46 START test between_int_outage_events_duration_hours__100000__0 ........ [RUN]
+19:51:26  15 of 46 PASS between_fct_site_monthly_compliance_energy_availability__1__0 .... [PASS in 0.06s]
+19:51:26  19 of 46 START test between_int_outage_events_lost_kwh__100000000__0 ........... [RUN]
+19:51:26  20 of 46 START test between_stg_inverter_power_ac_kw__100000__0 ................ [RUN]
+19:51:26  19 of 46 PASS between_int_outage_events_lost_kwh__100000000__0 ................. [PASS in 0.05s]
+19:51:26  21 of 46 START test not_null_contract_terms_site_id ............................ [RUN]
+19:51:26  18 of 46 PASS between_int_outage_events_duration_hours__100000__0 .............. [PASS in 0.07s]
+19:51:26  20 of 46 PASS between_stg_inverter_power_ac_kw__100000__0 ...................... [PASS in 0.06s]
+19:51:26  22 of 46 START test not_null_dim_assets_asset_id ............................... [RUN]
+19:51:26  23 of 46 START test not_null_fct_inverter_monthly_asset_id ..................... [RUN]
+19:51:26  21 of 46 PASS not_null_contract_terms_site_id .................................. [PASS in 0.06s]
+19:51:26  24 of 46 START test not_null_fct_service_tickets_ticket_id ..................... [RUN]
+19:51:26  22 of 46 PASS not_null_dim_assets_asset_id ..................................... [PASS in 0.05s]
+19:51:26  25 of 46 START test not_null_fct_site_monthly_compliance_compliance_status ..... [RUN]
+19:51:26  23 of 46 PASS not_null_fct_inverter_monthly_asset_id ........................... [PASS in 0.07s]
+19:51:26  26 of 46 START test not_null_int_inverter_capacity_asset_id .................... [RUN]
+19:51:26  24 of 46 PASS not_null_fct_service_tickets_ticket_id ........................... [PASS in 0.06s]
+19:51:26  27 of 46 START test not_null_int_inverter_capacity_capacity_kw ................. [RUN]
+19:51:26  25 of 46 PASS not_null_fct_site_monthly_compliance_compliance_status ........... [PASS in 0.07s]
+19:51:26  28 of 46 START test not_null_int_inverter_intervals_expected_kwh ............... [RUN]
+19:51:26  26 of 46 PASS not_null_int_inverter_capacity_asset_id .......................... [PASS in 0.06s]
+19:51:26  29 of 46 START test not_null_int_inverter_intervals_status ..................... [RUN]
+19:51:26  27 of 46 PASS not_null_int_inverter_capacity_capacity_kw ....................... [PASS in 0.06s]
+19:51:26  30 of 46 START test not_null_int_outage_events_duration_hours .................. [RUN]
+19:51:26  29 of 46 PASS not_null_int_inverter_intervals_status ........................... [PASS in 0.04s]
+19:51:26  28 of 46 PASS not_null_int_inverter_intervals_expected_kwh ..................... [PASS in 0.07s]
+19:51:26  31 of 46 START test not_null_int_outage_events_event_id ........................ [RUN]
+19:51:26  32 of 46 START test not_null_int_outage_incidents_incident_id .................. [RUN]
+19:51:26  30 of 46 PASS not_null_int_outage_events_duration_hours ........................ [PASS in 0.06s]
+19:51:26  33 of 46 START test not_null_int_site_intervals_reporting_inverters ............ [RUN]
+19:51:26  31 of 46 PASS not_null_int_outage_events_event_id .............................. [PASS in 0.06s]
+19:51:26  34 of 46 START test not_null_stg_inverter_power_asset_id ....................... [RUN]
+19:51:26  32 of 46 PASS not_null_int_outage_incidents_incident_id ........................ [PASS in 0.05s]
+19:51:26  35 of 46 START test relationships_fct_inverter_monthly_asset_id__asset_id__ref_dim_assets_  [RUN]
+19:51:26  35 of 46 PASS relationships_fct_inverter_monthly_asset_id__asset_id__ref_dim_assets_  [PASS in 0.04s]
+19:51:26  33 of 46 PASS not_null_int_site_intervals_reporting_inverters .................. [PASS in 0.07s]
+19:51:26  36 of 46 START test relationships_fct_service_tickets_asset_id__asset_id__ref_dim_assets_  [RUN]
+19:51:26  37 of 46 START test unique_combination_of_columns_fct_inverter_monthly_asset_id__month  [RUN]
+19:51:26  37 of 46 PASS unique_combination_of_columns_fct_inverter_monthly_asset_id__month  [PASS in 0.05s]
+19:51:26  38 of 46 START test unique_combination_of_columns_fct_site_monthly_compliance_site_id__month  [RUN]
+19:51:26  36 of 46 PASS relationships_fct_service_tickets_asset_id__asset_id__ref_dim_assets_  [PASS in 0.07s]
+19:51:26  39 of 46 START test unique_combination_of_columns_int_site_intervals_site_id__ts  [RUN]
+19:51:26  8 of 46 PASS assert_events_do_not_overlap ...................................... [PASS in 0.78s]
+19:51:26  40 of 46 START test unique_combination_of_columns_stg_inverter_power_asset_id__ts  [RUN]
+19:51:26  38 of 46 PASS unique_combination_of_columns_fct_site_monthly_compliance_site_id__month  [PASS in 0.10s]
+19:51:26  41 of 46 START test unique_contract_terms_site_id .............................. [RUN]
+19:51:26  41 of 46 PASS unique_contract_terms_site_id .................................... [PASS in 0.08s]
+19:51:27  42 of 46 START test unique_dim_assets_asset_id ................................. [RUN]
+19:51:27  34 of 46 PASS not_null_stg_inverter_power_asset_id ............................. [PASS in 0.38s]
+19:51:27  43 of 46 START test unique_fct_service_tickets_ticket_id ....................... [RUN]
+19:51:27  42 of 46 PASS unique_dim_assets_asset_id ....................................... [PASS in 0.08s]
+19:51:27  44 of 46 START test unique_int_inverter_capacity_asset_id ...................... [RUN]
+19:51:27  43 of 46 PASS unique_fct_service_tickets_ticket_id ............................. [PASS in 0.10s]
+19:51:27  45 of 46 START test unique_int_outage_events_event_id .......................... [RUN]
+19:51:27  44 of 46 PASS unique_int_inverter_capacity_asset_id ............................ [PASS in 0.09s]
+19:51:27  46 of 46 START test unique_int_outage_incidents_incident_id .................... [RUN]
+19:51:27  46 of 46 PASS unique_int_outage_incidents_incident_id .......................... [PASS in 0.08s]
+19:51:27  45 of 46 PASS unique_int_outage_events_event_id ................................ [PASS in 0.12s]
+19:51:27  39 of 46 PASS unique_combination_of_columns_int_site_intervals_site_id__ts ..... [PASS in 0.55s]
+19:51:28  40 of 46 PASS unique_combination_of_columns_stg_inverter_power_asset_id__ts .... [PASS in 1.78s]
+19:51:28  
+19:51:28  Finished running 46 data tests in 0 hours 0 minutes and 2.89 seconds (2.89s).
+19:51:28  
+19:51:28  Completed successfully
+19:51:28  
+19:51:28  Done. PASS=46 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=46
 # dbt test results
 
 46 tests: 46 pass
